@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleMap, LoadScript } from '@googlemaps/react-wrapper';
 
 const apiKey = {
-  apiKey: 'AIzaSyBhW3a3NVYWLvvALgGO4QHMgrCbLPoEEEA'
+  apiKey: ''
 };
 module.exports = apiKey;
 
@@ -11,18 +11,18 @@ const MapContainer = () => {
 
   useEffect(() => {
     const fetchKey = async () => {
-      const response = await fetch(
-        'https://your-api-key-server.com/api/key'
-      );
-      const key = await response.text();
-      setApiKey(key);
+      //const response = await fetch(
+      //  'https://your-api-key-server.com/api/key'
+      //);
+      //const key = await response.text();
+      setApiKey('');
     };
 
     fetchKey();
   }, []);
 
   return (
-    <LoadScript googleMapsApiKey={'AIzaSyBhW3a3NVYWLvvALgGO4QHMgrCbLPoEEEA'}>
+    <LoadScript googleMapsApiKey={apiKey.apiKey}>
       <GoogleMap
         zoom={8}
         center={{
@@ -34,4 +34,4 @@ const MapContainer = () => {
   );
 };
 
-export default MapContainer;
+export { MapContainer };
