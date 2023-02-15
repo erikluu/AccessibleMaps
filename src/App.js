@@ -1,10 +1,11 @@
 import './App.css';
-import { MapContainer } from './components/MapContainer';
+import { RouteInfo } from './components/RouteInfo';
 
 function App() {
   return (
-    <div className="App">
-      <MapContainer/>
+    <div>
+      <h1>My React App</h1>
+      <RouteInfo />
     </div>
   );
 }
