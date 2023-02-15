@@ -1,13 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
-import mapboxgl from "mapbox-gl";
+import mapboxgl, {} from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 
-mapboxgl.accessToken =
-  "pk.eyJ1IjoiY3J1Z2dnaWVybyIsImEiOiJja3pteWFjMTAxZ2k3MndueHZnbmhuaDN2In0.N9uLqiw04di8ghl1-KUkdw";
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
 const defLNG = -120.6252; // default lat/long is set to SLO
 const defLAT = 35.2628;
-const defZoom = 9;
+const defZoom = 9.00;
 
 const morroRockLNG = -120.864096;
 const morroRockLAT = 35.373504;
@@ -80,6 +79,12 @@ function MapView() {
         showUserHeading: true,
       })
     );
+
+    map.current.on("click", (e) => {
+      //console.log(e.lngLat);
+      //console.log(e.lngLat.wrap());
+      new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
+    });
     // Add markers to the map.
     // for (const marker of beachList.beaches) {
     //   // Create a DOM element for each marker.
