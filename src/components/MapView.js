@@ -8,45 +8,6 @@ const defLNG = -120.6252; // default lat/long is set to SLO
 const defLAT = 35.2628;
 const defZoom = 9.00;
 
-const morroRockLNG = -120.864096;
-const morroRockLAT = 35.373504;
-const pismoLNG = -120.643497;
-const pismoLAT = 35.138778;
-
-
-// possible schema for storing beach locations
-// displays on the map based on lat/long 
-// should store in database and display based on filters such as which are in view
-const beachList = {
-  type: "BeachCollection",
-  beaches: [
-    {
-      type: "Beach",
-      properties: {
-        message: "Its Morro Rock dude",
-        iconSize: [60, 60],
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [morroRockLNG, morroRockLAT],
-      },
-      img: "https://assets.simpleviewinc.com/simpleview/image/upload/c_fill,h_640,q_75,w_640/v1/clients/morrobayca/temp_6b55308e-95b9-4995-9749-d7342425ff73.jpg"
-    },
-    {
-      type: "Beach",
-      properties: {
-        message: "its pismo beach bro",
-        iconSize: [60, 60],
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [pismoLNG, pismoLAT],
-      },
-      img: "https://keyt.b-cdn.net/2020/09/118794055_1429416193923564_3229598932206464322_n-1.jpg",
-    }
-  ],
-};
-
 function MapView() {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -81,29 +42,61 @@ function MapView() {
     );
 
     map.current.on("click", (e) => {
-      //console.log(e.lngLat);
-      //console.log(e.lngLat.wrap());
       new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
     });
-    // Add markers to the map.
-    // for (const marker of beachList.beaches) {
-    //   // Create a DOM element for each marker.
-    //   const mark = document.createElement("div");
-    //   const width = marker.properties.iconSize[0];
-    //   const height = marker.properties.iconSize[1];
-    //   mark.className = "marker";
-    //   mark.style.backgroundImage = `url(${marker.img})`;
-    //   mark.style.width = `${width}px`;
-    //   mark.style.height = `${height}px`;
-    //   mark.style.backgroundSize = "100%";
-
-    //   mark.addEventListener("click", () => {
-    //     window.alert(marker.properties.message);
-    //   });
-    //   // Add markers to the map.
-    //   new mapboxgl.Marker(mark).setLngLat(marker.geometry.coordinates).addTo(map.current);
-    // }
+    
+    map.current.on('load', () => {
+      new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
+      new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
+      map.current.addSource('route1', {
+        'type': 'geojson',
+        'data': {
+          'type': 'Feature',
+          'properties': {},
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': [
+              [-120.669373, 35.304410],
+              [-120.667825, 35.302423],
+              [-120.668112, 35.302322],
+              [-120.668584, 35.302055],
+              [-120.669997, 35.300665],
+              [-120.671043, 35.299108],
+              [-120.671599, 35.298879],
+              [-120.672737, 35.298826],
+              [-120.67436, 35.298190],
+              [-120.674156, 35.297916],
+              [-120.673775, 35.297704],
+              [-120.671281, 35.294490],
+              [-120.670999, 35.294176],
+              [-120.670128, 35.293591],
+              [-120.669802, 35.293148],
+              [-120.669763, 35.290401],
+              [-120.669377, 35.288805],
+              [-120.668299, 35.286070],
+              [-120.667511, 35.285137],
+              [-120.667262, 35.284824],
+              [-120.66529, 35.282592]
+            ]
+          }
+        }
+      });
+      map.current.addLayer({
+        'id': 'route1',
+        'type': 'line',
+        'source': 'route1',
+        'layout': {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        'paint': {
+          'line-color': '#307bf2',
+          'line-width': 8
+        }
+      });
+    });
   });
+
 
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
