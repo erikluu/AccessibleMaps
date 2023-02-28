@@ -4,19 +4,18 @@ import axios from 'axios';
 
 function App() {
 
-  const [data, setData] = useState([]);
+  const waypoint0 = 'Cal Poly, CA';
+  const waypoint1 = '776 Chorro St, San Luis Obispo, CA';
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/data')
+    axios.get(`http://localhost:5000/api/route?wp.0=${waypoint0}&wp.1=${waypoint1}`)
       .then(response => {
-        setData(response.data);
+        console.log(response.data.resourceSets[0].resources[0]);
       })
       .catch(error => {
         console.log(error);
       });
   }, []);
-
-  console.log(data);
 
   return (
     <div>
