@@ -32,12 +32,20 @@ const route1coords = [
   [-120.66529, 35.282592]
 ];
 
+
 function MapView() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
+
+  const addLoc = (item) => {
+    new mapboxgl.Marker({
+      draggable: true,
+    }).setLngLat(item.geometry.coordinates).addTo(map.current);
+    return item.place_name
+  };
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
@@ -51,9 +59,8 @@ function MapView() {
     map.current.addControl(
       new MapboxGeocoder({
         accessToken: mapboxgl.accessToken,
-        marker: {
-          color: 'orange'
-        },
+        getItemValue: addLoc,
+        marker: false,
         mapboxgl: mapboxgl,
       })
     );
@@ -68,13 +75,14 @@ function MapView() {
       })
     );
 
-    map.current.on("click", (e) => {
-      new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
-    });
+    // add marker to mouse location on click
+    // map.current.on("click", (e) => {
+    //   new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
+    // });
     
     map.current.on('load', () => {
-      new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
-      new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
+      //new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
+      //new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
       map.current.addSource('route1', {
         'type': 'geojson',
         'data': {
@@ -96,18 +104,16 @@ function MapView() {
           'line-cap': 'round'
         },
         'paint': {
-          'line-color': '#307bf2',
+          'line-color': '#3386c0',
           'line-width': 8
         }
       });
 
+      // fit route to screen
       document.getElementById('zoomto').addEventListener('click', () => {  
         const coordinates = route1coords;
-        // Create a 'LngLatBounds' with both corners at the first coordinate.
-        const bounds = new mapboxgl.LngLatBounds(
-          coordinates[0],
-          coordinates[0]
-        );
+
+        const bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
         for (const coord of coordinates) {
           bounds.extend(coord);
         } 
@@ -137,7 +143,7 @@ function MapView() {
       <div className="sidebar">
         Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
       </div>
-      <button id="zoomto" className="btn-control">test zoom</button>
+      <button id="zoomto" className="sidebar2">test zoom</button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
