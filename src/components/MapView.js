@@ -86,6 +86,7 @@ function MapView() {
           }
         }
       });
+      
       map.current.addLayer({
         'id': 'route1',
         'type': 'line',

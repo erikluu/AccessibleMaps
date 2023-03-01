@@ -1,21 +1,26 @@
 import os
 import requests
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from uuid import uuid4
 
+# pip3 freeze > requirements.txt
+# pip3 install -r requirements.txt
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 data = ["your", "data", "here"]
 
 @app.route('/api/route', methods=['GET'])
 def get_route():
-    wp0 = request.args.get('wp.0')
-    wp1 = request.args.get('wp.1')
+    wp0 = request.args.get('wp0')
+    wp1 = request.args.get('wp1')
 
-    response = requests.get(f"https://dev.virtualearth.net/REST/V1/Routes/Walking?wp.0={wp0}&wp.1={wp1}&key={os.environ.get('BING_MAPS_API_KEY')}&routeAttributes=routePath")
+    url = "https://dev.virtualearth.net/REST/V1/Routes/Walking"
+    print(os.environ.get('REACT_APP_BING_MAPS_API_KEY'))
+    response = requests.get(f"{url}?wp.0={wp0}&wp.1={wp1}&key={os.environ.get('REACT_APP_BING_MAPS_API_KEY')}&routeAttributes=routePath")
 
     return jsonify(response.json())
 
@@ -37,4 +42,4 @@ def delete_data(id):
     return jsonify({'id': id})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port=4000, debug=True)
