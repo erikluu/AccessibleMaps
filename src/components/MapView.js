@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import mapboxgl, {} from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 //import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
-
+import axios from 'axios'
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
@@ -34,13 +34,17 @@ const route1coords = [
   [-120.66529, 35.282592]
 ];
 
-
 function MapView() {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
+
+  const [waypoints, setWaypoints] = useState([]);
+  const [routePath, setRoutePath] = useState([]);
+  const [routeDistance, setRouteDistance] = useState(0);
+  const [routeDistanceUnit, setRouteDistanceUnit] = useState('mi'); // 'km' or 'mi'
 
   const addLoc = (item) => {
     new mapboxgl.Marker({
@@ -110,6 +114,7 @@ function MapView() {
       //   }
       // });
 
+
       // fit route to screen
       document.getElementById('zoomto').addEventListener('click', () => {  
         const coordinates = route1coords;
@@ -138,6 +143,28 @@ function MapView() {
 
 
   });
+
+  // // get route
+  // useEffect(() => {
+  //   if (!map.current) return; // wait for map to initialize
+  //   const getURL = (waypoints, routeDistanceUnit) => {
+  //     let url = `http://localhost:4000/api/route?unit=${routeDistanceUnit}`;
+  //     for (let i = 0; i < waypoints.length; i++) {
+  //       url += `&wp${i}=${waypoints[i]}`;
+  //     }
+  //     return url;
+  //   }
+    
+  //   axios.get(`${getURL(waypoints, routeDistanceUnit)}`)
+  //     .then(response => {
+  //       // setRoutePath(response);
+  //       // setRouteDistance(response.data.resourceSets[0].resources[0].travelDistance);
+  //       console.log(response);
+  //     })
+  //     .catch(error => {
+  //       console.log(error);
+  //     });
+  // }, [waypoints, routeDistanceUnit]);
 
 
   useEffect(() => {

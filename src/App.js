@@ -1,6 +1,7 @@
 import "./App.css";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 // eslint-disable-next-line import/no-webpack-loader-syntax
+import axios from 'axios';
 import MapView from "./components/MapView";
 
 <link
@@ -9,6 +10,7 @@ import MapView from "./components/MapView";
 />;
 
 function App() {
+
   return (
     <div>
       <MapView />
