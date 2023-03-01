@@ -1,6 +1,13 @@
-import './App.css';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import "./App.css";
+import React, { useRef, useEffect, useState } from "react";
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import {axios} from "axios";
+import MapView from "./components/MapView";
+
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+/>;
 
 function App() {
 
@@ -19,7 +26,7 @@ function App() {
 
   return (
     <div>
-      <h1>AccessibleMaps</h1>
+      <MapView />
     </div>
   );
 }

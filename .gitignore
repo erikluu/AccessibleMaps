@@ -18,6 +18,8 @@
 .env.test.local
 .env.production.local
 /src/.env*
+.env
+/scratch/*
 
 npm-debug.log*
 yarn-debug.log*
