@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl, {} from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
+//import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
+
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
@@ -44,7 +46,7 @@ function MapView() {
     new mapboxgl.Marker({
       draggable: true,
     }).setLngLat(item.geometry.coordinates).addTo(map.current);
-    return item.place_name
+    return item.place_name;
   };
 
   useEffect(() => {
@@ -83,30 +85,30 @@ function MapView() {
     map.current.on('load', () => {
       //new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
       //new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
-      map.current.addSource('route1', {
-        'type': 'geojson',
-        'data': {
-          'type': 'Feature',
-          'properties': {},
-          'geometry': {
-            'type': 'LineString',
-            'coordinates': route1coords
-          }
-        }
-      });
-      map.current.addLayer({
-        'id': 'route1',
-        'type': 'line',
-        'source': 'route1',
-        'layout': {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        'paint': {
-          'line-color': '#3386c0',
-          'line-width': 8
-        }
-      });
+      // map.current.addSource('route1', {
+      //   'type': 'geojson',
+      //   'data': {
+      //     'type': 'Feature',
+      //     'properties': {},
+      //     'geometry': {
+      //       'type': 'LineString',
+      //       'coordinates': route1coords
+      //     }
+      //   }
+      // });
+      // map.current.addLayer({
+      //   'id': 'route1',
+      //   'type': 'line',
+      //   'source': 'route1',
+      //   'layout': {
+      //     'line-join': 'round',
+      //     'line-cap': 'round'
+      //   },
+      //   'paint': {
+      //     'line-color': '#3386c0',
+      //     'line-width': 8
+      //   }
+      // });
 
       // fit route to screen
       document.getElementById('zoomto').addEventListener('click', () => {  
@@ -119,6 +121,16 @@ function MapView() {
         map.current.fitBounds(bounds, {
           padding: 20
         });
+      });
+
+      document.getElementById('routing').addEventListener('click', () => {
+        const markers = document.querySelectorAll('[aria-label="Map marker"]');
+        //const markers = document.getElementsByClassName("mapboxgl-ctrl-icon");
+      
+        for(let i = 0; i < markers.length; i++) {
+            console.log("marker ", i);
+            console.log(markers[i]);
+        }
       });
 
     });
@@ -143,6 +155,7 @@ function MapView() {
         Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
       </div>
       <button id="zoomto" className="sidebar2">test zoom</button>
+      <button id="routing" className="sidebar3">find route</button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
