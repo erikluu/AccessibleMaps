@@ -4,7 +4,9 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 //import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
 import axios from 'axios'
 
+console.log(process.env);
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
+// mapboxgl.accessToken = "pk.eyJ1IjoiY3J1Z2dnaWVybyIsImEiOiJja3pteWFjMTAxZ2k3MndueHZnbmhuaDN2In0.N9uLqiw04di8ghl1-KUkdw";
 
 const defLNG = -120.6252; // default lat/long is set to SLO
 const defLAT = 35.2628;

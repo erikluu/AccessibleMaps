@@ -1,13 +1,3 @@
-# AccessibleMaps
-
-https://developers.google.com/maps/documentation/javascript/libraries-open-source
-
-### Plan:
-AccessibleMaps is a mapping application that focuses on making navigation easier for individuals with disabilities, particularly those with mobility impairments. The application provides information on the accessibility of different locations and routes, ensuring that users can easily find accessible paths and places.
-
-The goal of AccessibleMaps is to make the world more accessible to everyone by providing detailed information on the accessibility of different locations and routes. Whether you are using a wheelchair or are just looking for a more accessible route, AccessibleMaps has got you covered.
-
-
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -16,20 +6,13 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
-### `npm run frontend`
+### `npm start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
-
-### `npm run backend`
-
-Runs the app in the development mode.\
-Hosts the python flask backend on localhost:5000
-
-The page will reload when you make changes.\
 
 ### `npm test`
 
