@@ -42,11 +42,6 @@ function MapView() {
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
 
-  const [waypoints, setWaypoints] = useState([]);
-  const [routePath, setRoutePath] = useState([]);
-  const [routeDistance, setRouteDistance] = useState(0);
-  const [routeDistanceUnit, setRouteDistanceUnit] = useState('mi'); // 'km' or 'mi'
-
   const addLoc = (item) => {
     new mapboxgl.Marker({
       draggable: true,
@@ -56,6 +51,7 @@ function MapView() {
 
   useEffect(() => {
     if (map.current) return; // initialize map only once
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
@@ -140,9 +136,6 @@ function MapView() {
       });
 
     });
-
-
-
   });
 
   // // get route
@@ -177,13 +170,27 @@ function MapView() {
     });
   });
 
+  // get route from /api/route
+  const getRoute = () => {
+    const wp0 = [-120.669763, 35.290401];
+    const wp1 = [-120.66529, 35.282592];
+    // send waypoints to server api/route
+    axios.get(`http://localhost:4000/api/route?unit=mi&wp0=${wp0}&wp1=${wp1}`)
+      .then(response => {
+        console.log(response);
+        // setRoutePath(response);
+        // setRouteDistance(response.data.resourceSets[0].resources[0].travelDistance);
+      }
+    );
+  }
+  
   return (
     <div>
       <div className="sidebar">
         Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
       </div>
       <button id="zoomto" className="sidebar2">test zoom</button>
-      <button id="routing" className="sidebar3">find route</button>
+      <button onClick={getRoute} id="routing" className="sidebar3">Find route</button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
