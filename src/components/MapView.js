@@ -43,9 +43,13 @@ function MapView() {
   const [zoom, setZoom] = useState(defZoom);
 
   const addLoc = (item) => {
-    new mapboxgl.Marker({
+    const coords = item.geometry.coordinates;
+    const marker = new mapboxgl.Marker({
       draggable: true,
-    }).setLngLat(item.geometry.coordinates).addTo(map.current);
+    })
+    .setLngLat(coords)
+    .addTo(map.current);
+
     return item.place_name;
   };
 
