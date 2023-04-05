@@ -3,6 +3,7 @@ import mapboxgl, {} from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 //import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
 import axios from 'axios'
+import { v4 as uuidv4 } from 'uuid';
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
@@ -67,7 +68,9 @@ function MapView() {
     if (routeObject) {
       const coordinates = routeObject.resourceSets[0].resources[0].routePath.line.coordinates;
       setCurrentPath(reverseTuples(coordinates));
-      setCurrentBounds(routeObject.resourceSets[0].resources[0].bbox);
+      const bounds = [reverseTuples(routeObject.resourceSets[0].resources[0].bbox[0]), reverseTuples(routeObject.resourceSets[0].resources[0].bbox[1])];
+      setCurrentBounds(bounds);
+      
       setCurrentDistance(routeObject.resourceSets[0].resources[0].travelDistance);
       setCurrentDuration(routeObject.resourceSets[0].resources[0].travelDuration);
     }
@@ -76,11 +79,12 @@ function MapView() {
   
   // update map based on currentPath change, set bounds and zoom
   useEffect(() => {
-    if (map.current) {
+    if (map.current && currentPath.length > 0) {
       map.current.on('load', () => {
         new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
         new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
-        map.current.addSource('route1', {
+        const routeID = uuidv4();
+        map.current.addSource(routeID, {
           'type': 'geojson',
           'data': {
             'type': 'Feature',
@@ -92,9 +96,9 @@ function MapView() {
           }
         });
         map.current.addLayer({
-          'id': 'route1',
+          'id': routeID,
           'type': 'line',
-          'source': 'route1',
+          'source': routeID,
           'layout': {
             'line-join': 'round',
             'line-cap': 'round'
@@ -106,19 +110,19 @@ function MapView() {
         });
       });
 
-      map.current.fitBounds(currentBounds, {
-        padding: 50,
-        maxZoom: 15,
-      });
+      // if (currentBounds.length > 0) {
+      //   map.current.fitBounds(currentBounds, {
+      //     padding: 50,
+      //     maxZoom: 15,
+      //   });
+      // }
     }
   }, [currentBounds, currentPath]);
 
-
-
-  //   // add marker to mouse location on click
-  //   // map.current.on("click", (e) => {
-  //   //   new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
-  //   // });
+    // add marker to mouse location on click
+    // map.current.on("click", (e) => {
+    //   new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
+    // });
     
   //   map.current.on('load', () => {
   //     new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
@@ -149,14 +153,15 @@ function MapView() {
   //     });
 
 
-  //     // fit route to screen
-  //     document.getElementById('zoomto').addEventListener('click', () => {  
-  //       const bounds = new mapboxgl.LngLatBounds(currentBounds[0], currentBounds[0]);
+      // // fit route to screen
+      // document.getElementById('zoomto').addEventListener('click', () => {  
+      //   if 
+      //   const bounds = new mapboxgl.LngLatBounds(currentBounds[0], currentBounds[0]);
 
-  //       map.current.fitBounds(bounds, {
-  //         padding: 20
-  //       });
-  //     });
+      //   map.current.fitBounds(bounds, {
+      //     padding: 20
+      //   });
+      // });
 
   //     document.getElementById('routing').addEventListener('click', () => {
   //       const markers = document.querySelectorAll('[aria-label="Map marker"]');
@@ -171,14 +176,14 @@ function MapView() {
   //   });
   // }, [routeObject]);
 
-  // useEffect(() => {
-  //   if (!map.current) return; // wait for map to initialize
-  //   map.current.on("move", () => {
-  //     setLng(map.current.getCenter().lng.toFixed(4));
-  //     setLat(map.current.getCenter().lat.toFixed(4));
-  //     setZoom(map.current.getZoom().toFixed(2));
-  //   });
-  // });
+  useEffect(() => {
+    if (!map.current) return; // wait for map to initialize
+    map.current.on("move", () => {
+      setLng(map.current.getCenter().lng.toFixed(4));
+      setLat(map.current.getCenter().lat.toFixed(4));
+      setZoom(map.current.getZoom().toFixed(2));
+    });
+  });
 
   function reverseTuples(list) {
     const reversedList = [];
