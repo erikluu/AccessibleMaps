@@ -3,13 +3,37 @@ import mapboxgl, {} from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 //import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
 import axios from 'axios'
-import { v4 as uuidv4 } from 'uuid';
 
+console.log(process.env);
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
 const defLNG = -120.6252; // default lat/long is set to SLO
 const defLAT = 35.2628;
 const defZoom = 9.00;
+
+const route1coords = [
+  [-120.669373, 35.304410],
+  [-120.667825, 35.302423],
+  [-120.668112, 35.302322],
+  [-120.668584, 35.302055],
+  [-120.669997, 35.300665],
+  [-120.671043, 35.299108],
+  [-120.671599, 35.298879],
+  [-120.672737, 35.298826],
+  [-120.67436, 35.298190],
+  [-120.674156, 35.297916],
+  [-120.673775, 35.297704],
+  [-120.671281, 35.294490],
+  [-120.670999, 35.294176],
+  [-120.670128, 35.293591],
+  [-120.669802, 35.293148],
+  [-120.669763, 35.290401],
+  [-120.669377, 35.288805],
+  [-120.668299, 35.286070],
+  [-120.667511, 35.285137],
+  [-120.667262, 35.284824],
+  [-120.66529, 35.282592]
+];
 
 function MapView() {
   const mapContainer = useRef(null);
@@ -17,13 +41,8 @@ function MapView() {
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
-  
-  // route stuff
-  const [routeObject, setRouteObject] = useState(null);
-  const [currentPath, setCurrentPath] = useState([]);
-  const [currentBounds, setCurrentBounds] = useState([]);
-  const [currentDistance, setCurrentDistance] = useState(0); // mi or km
-  const [currentDuration, setCurrentDuration] = useState(0); // seconds
+
+  const [route, setRoute] = useState(null);
 
   const addLoc = (item) => {
     new mapboxgl.Marker({
@@ -32,10 +51,8 @@ function MapView() {
     return item.place_name;
   };
 
-  // initialize map
   useEffect(() => {
     if (map.current) return; // initialize map only once
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v11",
@@ -61,120 +78,92 @@ function MapView() {
         showUserHeading: true,
       })
     );
-  });
-
-  // update states bsaed on routeObject change
-  useEffect(() => {
-    if (routeObject) {
-      const coordinates = routeObject.resourceSets[0].resources[0].routePath.line.coordinates;
-      setCurrentPath(reverseTuples(coordinates));
-      const bounds = [reverseTuples(routeObject.resourceSets[0].resources[0].bbox[0]), reverseTuples(routeObject.resourceSets[0].resources[0].bbox[1])];
-      setCurrentBounds(bounds);
-      
-      setCurrentDistance(routeObject.resourceSets[0].resources[0].travelDistance);
-      setCurrentDuration(routeObject.resourceSets[0].resources[0].travelDuration);
-    }
-  }, [routeObject]);
-
-  
-  // update map based on currentPath change, set bounds and zoom
-  useEffect(() => {
-    if (map.current && currentPath.length > 0) {
-      map.current.on('load', () => {
-        new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
-        new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
-        const routeID = uuidv4();
-        map.current.addSource(routeID, {
-          'type': 'geojson',
-          'data': {
-            'type': 'Feature',
-            'properties': {},
-            'geometry': {
-              'type': 'LineString',
-              'coordinates': currentPath
-            }
-          }
-        });
-        map.current.addLayer({
-          'id': routeID,
-          'type': 'line',
-          'source': routeID,
-          'layout': {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          'paint': {
-            'line-color': '#888',
-            'line-width': 8
-          }
-        });
-      });
-
-      // if (currentBounds.length > 0) {
-      //   map.current.fitBounds(currentBounds, {
-      //     padding: 50,
-      //     maxZoom: 15,
-      //   });
-      // }
-    }
-  }, [currentBounds, currentPath]);
 
     // add marker to mouse location on click
     // map.current.on("click", (e) => {
     //   new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
     // });
     
-  //   map.current.on('load', () => {
-  //     new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
-  //     new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
-  //     map.current.addSource('route1', {
-  //       'type': 'geojson',
-  //       'data': {
-  //         'type': 'Feature',
-  //         'properties': {},
-  //         'geometry': {
-  //           'type': 'LineString',
-  //           'coordinates': currentPath
-  //         }
-  //       }
-  //     });
-  //     map.current.addLayer({
-  //       'id': 'route1',
-  //       'type': 'line',
-  //       'source': 'route1',
-  //       'layout': {
-  //         'line-join': 'round',
-  //         'line-cap': 'round'
-  //       },
-  //       'paint': {
-  //         'line-color': '#3386c0',
-  //         'line-width': 8
-  //       }
-  //     });
-
-
-      // // fit route to screen
-      // document.getElementById('zoomto').addEventListener('click', () => {  
-      //   if 
-      //   const bounds = new mapboxgl.LngLatBounds(currentBounds[0], currentBounds[0]);
-
-      //   map.current.fitBounds(bounds, {
-      //     padding: 20
-      //   });
+    map.current.on('load', () => {
+      //new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
+      //new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
+      // map.current.addSource('route1', {
+      //   'type': 'geojson',
+      //   'data': {
+      //     'type': 'Feature',
+      //     'properties': {},
+      //     'geometry': {
+      //       'type': 'LineString',
+      //       'coordinates': route1coords
+      //     }
+      //   }
+      // });
+      // map.current.addLayer({
+      //   'id': 'route1',
+      //   'type': 'line',
+      //   'source': 'route1',
+      //   'layout': {
+      //     'line-join': 'round',
+      //     'line-cap': 'round'
+      //   },
+      //   'paint': {
+      //     'line-color': '#3386c0',
+      //     'line-width': 8
+      //   }
       // });
 
-  //     document.getElementById('routing').addEventListener('click', () => {
-  //       const markers = document.querySelectorAll('[aria-label="Map marker"]');
-  //       //const markers = document.getElementsByClassName("mapboxgl-ctrl-icon");
-      
-  //       for(let i = 0; i < markers.length; i++) {
-  //           console.log("marker ", i);
-  //           console.log(markers[i]);
-  //       }
-  //     });
 
-  //   });
-  // }, [routeObject]);
+      // fit route to screen
+      document.getElementById('zoomto').addEventListener('click', () => {  
+        const coordinates = route1coords;
+
+        const bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
+        for (const coord of coordinates) {
+          bounds.extend(coord);
+        } 
+        map.current.fitBounds(bounds, {
+          padding: 20
+        });
+      });
+
+      document.getElementById('routing').addEventListener('click', () => {
+        const markers = document.querySelectorAll('[aria-label="Map marker"]');
+        //const markers = document.getElementsByClassName("mapboxgl-ctrl-icon");
+      
+        for(let i = 0; i < markers.length; i++) {
+            console.log("marker ", i);
+            console.log(markers[i]);
+        }
+      });
+
+    });
+
+
+
+  });
+
+  // // get route
+  // useEffect(() => {
+  //   if (!map.current) return; // wait for map to initialize
+  //   const getURL = (waypoints, routeDistanceUnit) => {
+  //     let url = `http://localhost:4000/api/route?unit=${routeDistanceUnit}`;
+  //     for (let i = 0; i < waypoints.length; i++) {
+  //       url += `&wp${i}=${waypoints[i]}`;
+  //     }
+  //     return url;
+  //   }
+    
+  //   axios.get(`${getURL(waypoints, routeDistanceUnit)}`)
+  //     .then(response => {
+  //       // setRoutePath(response);
+  //       // setRouteDistance(response.data.resourceSets[0].resources[0].travelDistance);
+  //       console.log(response);
+  //     })
+  //     .catch(error => {
+  //       console.log(error);
+  //     });
+  // }, [waypoints, routeDistanceUnit]);
+
 
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
@@ -185,46 +174,35 @@ function MapView() {
     });
   });
 
-  function reverseTuples(list) {
-    const reversedList = [];
-    
-    for (let i = 0; i < list.length; i++) {
-      const tuple = list[i];
-      reversedList.push(new mapboxgl.LngLat(tuple[1], tuple[0]));
-    }
-    
-    return reversedList;
-  }  
-
-  // get route from /api/route
-  const getRoute = async () => {
-    const wp0 = [35.290401, -120.669763];
-    const wp1 = [35.2813, -120.6608];
-    const unit = "mi";
-
-    const waypoint = (wp) => {
-      return `${wp[0]},${wp[1]}`;
-    }
-
-    // send waypoints to server api/route
-    await axios.get(`http://localhost:4000/api/route?unit=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}`)
-      .then(response => {
-        console.log(response.data);
-        setRouteObject(response.data);
-      }
-    );
-  }
+    // get route from /api/route
+    const getRoute = async () => {
+      const wp0 = [35.290401, -120.669763];
+      const wp1 = [35.2813, -120.6608];
+      const unit = "mi";
   
+      // [lat, lng] -> "lat,lng"
+      const waypoint = (wp) => {
+        return `${wp[0]},${wp[1]}`;
+      }
+  
+      // send waypoints to server api/route
+      await axios.get(`http://localhost:4000/api/route?unit=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}`)
+        .then(response => {
+          console.log(response.data);
+          setRoute(response.data);
+        }
+      );
+    }
+
   return (
     <div>
       <div className="sidebar">
         Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
       </div>
       <button id="zoomto" className="sidebar2">test zoom</button>
-      <button onClick={getRoute} id="routing" className="sidebar3">Find route</button>
+      <button id="routing" className="sidebar3">find route</button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
 }
-
 export default MapView;

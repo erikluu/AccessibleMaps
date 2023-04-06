@@ -1,19 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
-const app = express();
-const port = 4000;
-
 require('dotenv').config();
 
-const baseURL = 'https://dev.virtualearth.net/REST/V1/Routes/Walking';
+const polyline = require('./polyline');
 
+const port = 4000;
+const app = express();
 app.use(cors({origin: 'http://localhost:3000'}));
 app.use(express.json());
 
+const baseURL = 'https://route.ls.hereapi.com/routing/7.2/calculateroute.json';
+const mode = (option) => `mode=${option};pedestrian`; // mode=[fastest, shortest, balanced]
+
 app.get('/api/route', async (req, res) => {
   const { unit, wp0, wp1 } = req.query;
-  const url = `${baseURL}?wp.0=${wp0}&wp.1=${wp1}&key=${process.env.BING_MAPS_API_KEY}&distanceUnit=${unit}&routeAttributes=routePath`;
+  const url = `https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin=${wp0}&destination=${wp1}&return=elevation,polyline,summary&apiKey=${process.env.HERE_API_KEY}`;
 
   https.get(url, (response) => {
     let data;
@@ -31,6 +33,12 @@ app.get('/api/route', async (req, res) => {
     console.log(err);
     res.status(500).send('Error');
   });
+});
+
+app.get('/api/decodePolyline', async (req, res) => {
+  const { polyline } = req.query;
+  const decoded = polyline.decode(polyline);
+  res.send(decoded);
 });
 
 app.listen(port, () => {
