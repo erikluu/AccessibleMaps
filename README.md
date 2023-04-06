@@ -16,4 +16,4 @@ The application provides accessible routes for various modes of transportation s
 
 ## More Details
 Cal Poly 2023 Senior Project   
-Erik Luu and Carlo Ruggiero
+Erik Luu, Carlo Ruggiero
