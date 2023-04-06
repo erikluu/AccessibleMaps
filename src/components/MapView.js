@@ -182,9 +182,6 @@ function MapView() {
 
   return (
     <div>
-      <div className="sidebar">
-        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
-      </div>
       <button id="zoomto" className="sidebar2">test zoom</button>
       <button id="routing" className="sidebar3">find route</button>
       <div ref={mapContainer} className="map-container" />

@@ -19,6 +19,40 @@ code {
 }
 
 .sidebar {
+  position: absolute;
+  top: 60px;
+  left: -15vw;
+  height: 100%;
+  width: 15vw;
+  transition: left 0.3s ease-in-out;
+  background-color: lightgray;
+}
+.sidebar-toggle {
+  position: absolute;
+  top: 20%;
+  right: -60px;
+  height: 60px;
+  width: 60px;
+  z-index: 1;
+}
+.content {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  height: 100%;
+  transition: left 0.3s ease-in-out;
+  background-color: lightgray;
+}
+.sidebar.open {
+  left: 0;
+}
+.content.open {
+  left: 15vw;
+}
+
+
+/* .sidebar {
   background-color: rgba(35, 55, 75, 0.9);
   color: #fff;
   padding: 6px 12px;
@@ -29,7 +63,7 @@ code {
   left: 0;
   margin: 12px;
   border-radius: 4px;
-}
+} */
 
 .sidebar2 {
   background-color: rgba(35, 55, 75, 0.9);
