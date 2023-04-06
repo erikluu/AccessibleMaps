@@ -20,35 +20,44 @@ code {
 
 .sidebar {
   position: absolute;
-  top: 60px;
-  left: -15vw;
+  left: -20vw;
   height: 100%;
-  width: 15vw;
-  transition: left 0.3s ease-in-out;
-  background-color: lightgray;
+  width: 20vw;
+  transition: left 0.1s ease-in-out;
+  background-color: #fff;
+  box-shadow: 1px 0px 6px rgb(75, 75, 75);
+  z-index: 10;
 }
+
 .sidebar-toggle {
   position: absolute;
-  top: 20%;
-  right: -60px;
-  height: 60px;
-  width: 60px;
+  top: 47%;
+  right: -25px;
+  height: 6%;
+  width: 25px;
   z-index: 1;
+  cursor: pointer;
+  font-size: x-large;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-width: 1px;
+  border-color: rgb(131, 131, 131);
 }
+
 .content {
   position: absolute;
   top: 60px;
   left: 0;
   right: 0;
   height: 100%;
-  transition: left 0.3s ease-in-out;
-  background-color: lightgray;
+  transition: left 0.1s ease-in-out;
+  background-color: #fff;
 }
 .sidebar.open {
   left: 0;
 }
 .content.open {
-  left: 15vw;
+  left: 20vw;
 }
 
 
