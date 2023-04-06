@@ -1,11 +1,13 @@
 import React from "react";
 
+import Path from "./Path";
+
 const SideBar = props => {
   const sidebarClass = props.isOpen ? "sidebar open" : "sidebar";
   if (props.isOpen) 
     return (
       <div className={sidebarClass}>
-        <div> content </div>
+        <Path />
         <button onClick={props.toggleSidebar} className="sidebar-toggle">
           &#8249;
         </button>
@@ -14,7 +16,7 @@ const SideBar = props => {
   else
     return (
       <div className={sidebarClass}>
-        <div> content </div>
+        <Path />
         <button onClick={props.toggleSidebar} className="sidebar-toggle">
           &#8250;
         </button>
