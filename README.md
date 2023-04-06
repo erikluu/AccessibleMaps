@@ -1,8 +1,8 @@
 # AccessibleMaps
 
-AccessibleMaps is a web-based application that provides accessible routes for individuals with disabilities.\n
+AccessibleMaps is a web-based application that provides accessible routes for individuals with disabilities.
 
-The application provides accessible routes for various modes of transportation such as driving, biking, transit, walking, and now an option for ADA users.\n
+The application provides accessible routes for various modes of transportation such as driving, biking, transit, walking, and now an option for ADA users.
 
 ## Features (planned)
 * Accessible routes for ADA users
@@ -11,5 +11,6 @@ The application provides accessible routes for various modes of transportation s
 * User-friendly interface
 
 ## For Development
-npm run frontend\n
+npm run frontend
+
 npm run backend
