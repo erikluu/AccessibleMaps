@@ -11,6 +11,9 @@ The application provides accessible routes for various modes of transportation s
 * User-friendly interface
 
 ## For Development
-npm run frontend
+* npm run frontend
+* npm run backend
 
-npm run backend
+## More Details
+Cal Poly 2023 Senior Project   
+Erik Luu and Carlo Ruggiero
