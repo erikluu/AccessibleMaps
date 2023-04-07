@@ -1,38 +1,60 @@
+// Required packages and modules
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
-const polyline = require('./polyline');
+// Load environment variables
+dotenv.config();
 
+// Constants and variables
 const port = 4000;
 const app = express();
-app.use(cors({origin: 'http://localhost:3000'}));
+const polyline = require('./modules/polyline');
+const queryProcessing = require('./modules/queryProcessing');
+
+// Middleware
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 
-const baseURL = 'https://route.ls.hereapi.com/routing/7.2/calculateroute.json';
-const mode = (option) => `mode=${option};pedestrian`; // mode=[fastest, shortest, balanced]
-
+// Routes
 app.get('/api/route', async (req, res) => {
-  const { unit, wp0, wp1 } = req.query;
-  const url = `https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin=${wp0}&destination=${wp1}&return=elevation,polyline,summary&apiKey=${process.env.HERE_API_KEY}`;
+  // https://developer.here.com/documentation/routing-api/api-reference-swagger.html
+  /* parameters: 
+    transportMode=pedestrian[0.5...2] <- speed
+    return=elevation,polyline,summary
+    origin=''
+    destination=''
+    via=''
+    routingMode=[fastest, shortest]
+    alternatives=[0...6]
+    units=[metric, imperial]
+    spans=length,duration,names,walkAttributes,streetAttributes,routeNumbers
+  */
 
-  https.get(url, (response) => {
-    let data;
+  const url = queryProcessing.formatURL(req.query);
+  
+  res.send(waypoints);
 
-    response.on('data', (chunk) => {
-      data = chunk;
-    });
+  // const { unit, wp0, wp1 } = req.query;
+  // const url = `https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin=${wp0}&destination=${wp1}&return=elevation,polyline,summary&apiKey=${process.env.HERE_API_KEY}`;
 
-    response.on('end', () => {
-      const result = JSON.parse(data);
-      res.send(result);
-    });
+  // https.get(url, (response) => {
+  //   let data;
 
-  }).on('error', (err) => {
-    console.log(err);
-    res.status(500).send('Error');
-  });
+  //   response.on('data', (chunk) => {
+  //     data = chunk;
+  //   });
+
+  //   response.on('end', () => {
+  //     const result = JSON.parse(data);
+  //     res.send(result);
+  //   });
+
+  // }).on('error', (err) => {
+  //   console.log(err);
+  //   res.status(500).send('Error');
+  // });
 });
 
 app.get('/api/decodePolyline', async (req, res) => {

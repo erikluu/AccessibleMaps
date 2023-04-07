@@ -42,7 +42,8 @@ function MapView() {
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
 
-  const [route, setRoute] = useState(null);
+  const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
+  const [routes, setRoutes] = useState(null); // list of route objects 
 
   const addLoc = (item) => {
     new mapboxgl.Marker({
@@ -189,7 +190,7 @@ function MapView() {
       await axios.get(`http://localhost:4000/api/route?unit=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}`)
         .then(response => {
           console.log(response.data);
-          setRoute(response.data);
+          setRoutes(response.data);
         }
       );
     }
@@ -200,7 +201,7 @@ function MapView() {
         Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
       </div>
       <button id="zoomto" className="sidebar2">test zoom</button>
-      <button id="routing" className="sidebar3">find route</button>
+      <button onClick={getRoute} id="routing" className="sidebar3">Find Route</button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
