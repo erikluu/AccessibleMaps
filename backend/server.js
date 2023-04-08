@@ -20,15 +20,29 @@ app.use(express.json());
 
 // Routes
 app.get('/api/route',[
-  check('alternatives').isInt({ min: 0, max: 6 }),
-  check('routingMode').isIn(['fastest', 'shortest']),
-  check('transportMode').isFloat({ min: 0.5, max: 2 }),
-  check('units').isIn(['metric', 'imperial']),
-  check('wp').custom((value, { req }) => {
-    const wpParams = Array.isArray(req.query.wp) ? req.query.wp : [req.query.wp];
-    if (wpParams.filter(p => p === 'wp').length < 2) {
-      throw new Error('At least two wp query parameters are required');
-    }
+  check('alternatives').optional().isInt({ min: 0, max: 6 }),
+  check('return').optional().isIn(['elevation', 'polyline', 'summary']),
+  check('routingMode').optional().isIn(['fastest', 'shortest']),
+  check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers']),
+  check('speed').optional().isFloat({ min: 0.5, max: 2 }),
+  check('units').optional().isIn(['metric', 'imperial']),
+  check('wp').custom((_value, { req }) => {
+    // filter out all query parameters that are not waypoints
+    const waypoints = Object.keys(req.query).filter((key) => /^wp\d+$/.test(key));
+
+    // check if there are at least 2 waypoints
+    if (waypoints.length < 2) {
+      throw new Error('At least 2 waypoints are required');
+    }    
+
+    // check if all waypoints are valid coordinates
+    waypoints.forEach((waypoint) => {
+      const coordinates = req.query[waypoint];
+      if (coordinates.split(',').length !== 2) {
+        throw new Error(`Invalid waypoint formatting: ${waypoint}. Check if it is in the format "lat,lng"`);
+      }
+    });
+
     return true;
   })
 ], async (req, res) => {
@@ -48,7 +62,7 @@ app.get('/api/route',[
 
     response.on('end', () => {
       const result = JSON.parse(data);
-      res.send(result);
+      res.status(200).send(result);
     });
 
   }).on('error', (err) => {

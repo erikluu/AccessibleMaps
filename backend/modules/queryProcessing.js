@@ -1,22 +1,24 @@
 const BASE_URL = 'https://route.ls.hereapi.com/routing/7.2/calculateroute.json';
 const MODE = (option) => `mode=${option};pedestrian`; // mode=[fastest, shortest, balanced]
 
-function waypointsQuery(query) {
+function formatWaypoints(query) {
+    let waypointsCount = 0;
     let waypoints = [];
     Object.keys(query).forEach((key) => {
-        if (/^wp$/.test(key)) {
+        if (/^wp\d+$/.test(key)) {
             waypoints.push(query[key]);
+            waypointsCount++;
         }
     });
 
     let waypointsQuery = '';
     for (let i = 0; i < waypoints.length; i++) {
         if (i === 0) {
-            waypointQuery += `&origin=${waypoints[i]}`;
+            waypointsQuery += `&origin=${waypoints[i]}`;
         } else if (i === waypoints.length - 1) {
-            waypointQuery += `&destination=${waypoints[i]}`;
+            waypointsQuery += `&destination=${waypoints[i]}`;
         } else {
-            waypointQuery += `&via=${waypoints[i]}`;
+            waypointsQuery += `&via=${waypoints[i]}`;
         }
     }
     
@@ -24,22 +26,39 @@ function waypointsQuery(query) {
 }
 
 // turn all keys in query object into a string
-function formatQuery(query) {
-    let queryArray = [];
-    Object.keys(query).forEach((key) => {
-        if (key !== 'origin' && key !== 'destination' && key !== 'via') {
-            queryArray.push(`${key}=${query[key]}`);
+function formatRest(defaultQuery, query) {
+    let rest = '';
+    Object.keys(defaultQuery).forEach((key) => {
+        if (!/^wp\d+$/.test(key)) {
+            if (query[key] === undefined) {
+                rest += `${key}=${defaultQuery[key]}&`;
+            } else {
+                rest += `${key}=${query[key]}&`;
+            }
         }
     });
 
-    return queryArray.join('&');
+    return rest;
 }
 
 function formatURL(query) {
-    const waypointQuery = waypointsQuery(query);
-    const restOfQuery = formatQuery(query);
+    const defaultQuery = {
+        alternatives: 3,
+        return: "elevation,polyline,summary",
+        routingMode: 'fastest',
+        spans: "length,duration,routeNumbers",
+        speed: 1.4,
+        units: 'imperial'
+    };
 
-    const url = `${BASE_URL}?${restOfQuery}${waypointQuery}&apiKey=${process.env.HERE_API_KEY}`;
+    const waypoints = formatWaypoints(query);
+    const rest = formatRest(defaultQuery, query);
+
+    const url = `${BASE_URL}?${rest}${waypoints}&apiKey=${process.env.HERE_API_KEY}`;
     
     return url;
 }
+
+module.exports = {
+    formatURL
+};

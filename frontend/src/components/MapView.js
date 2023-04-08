@@ -179,7 +179,9 @@ function MapView() {
     const getRoute = async () => {
       const wp0 = [35.290401, -120.669763];
       const wp1 = [35.2813, -120.6608];
-      const unit = "mi";
+      const wp2 = [35.282592, -120.66529];
+      const unit = "imperial";
+      const speed = 2;
   
       // [lat, lng] -> "lat,lng"
       const waypoint = (wp) => {
@@ -187,7 +189,7 @@ function MapView() {
       }
   
       // send waypoints to server api/route
-      await axios.get(`http://localhost:4000/api/route?unit=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}`)
+      await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&wp2=${waypoint(wp2)}`)
         .then(response => {
           console.log(response.data);
           setRoutes(response.data);
