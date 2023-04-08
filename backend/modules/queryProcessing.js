@@ -1,5 +1,4 @@
-const BASE_URL = 'https://route.ls.hereapi.com/routing/7.2/calculateroute.json';
-const MODE = (option) => `mode=${option};pedestrian`; // mode=[fastest, shortest, balanced]
+const BASE_URL = 'https://router.hereapi.com/v8/routes';
 
 function formatWaypoints(query) {
     let waypointsCount = 0;
@@ -14,7 +13,7 @@ function formatWaypoints(query) {
     let waypointsQuery = '';
     for (let i = 0; i < waypoints.length; i++) {
         if (i === 0) {
-            waypointsQuery += `&origin=${waypoints[i]}`;
+            waypointsQuery += `origin=${waypoints[i]}`;
         } else if (i === waypoints.length - 1) {
             waypointsQuery += `&destination=${waypoints[i]}`;
         } else {
@@ -29,11 +28,11 @@ function formatWaypoints(query) {
 function formatRest(defaultQuery, query) {
     let rest = '';
     Object.keys(defaultQuery).forEach((key) => {
-        if (!/^wp\d+$/.test(key)) {
+        if (!/^wp\d+$/.test(key)) {    
             if (query[key] === undefined) {
-                rest += `${key}=${defaultQuery[key]}&`;
+                rest += `&${key}=${defaultQuery[key]}`;
             } else {
-                rest += `${key}=${query[key]}&`;
+                rest += `&${key}=${query[key]}`;
             }
         }
     });
@@ -45,16 +44,16 @@ function formatURL(query) {
     const defaultQuery = {
         alternatives: 3,
         return: "elevation,polyline,summary",
-        routingMode: 'fastest',
         spans: "length,duration,routeNumbers",
-        speed: 1.4,
-        units: 'imperial'
+        transportMode: "pedestrian",
+        units: "imperial"
     };
+    if (query.speed) { delete query.speed; }
 
     const waypoints = formatWaypoints(query);
     const rest = formatRest(defaultQuery, query);
 
-    const url = `${BASE_URL}?${rest}${waypoints}&apiKey=${process.env.HERE_API_KEY}`;
+    const url = `${BASE_URL}?${waypoints}${rest}&apiKey=${process.env.HERE_API_KEY}`;
     
     return url;
 }

@@ -181,7 +181,6 @@ function MapView() {
       const wp1 = [35.2813, -120.6608];
       const wp2 = [35.282592, -120.66529];
       const unit = "imperial";
-      const speed = 2;
   
       // [lat, lng] -> "lat,lng"
       const waypoint = (wp) => {
