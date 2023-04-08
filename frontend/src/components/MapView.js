@@ -191,7 +191,6 @@ function MapView() {
       await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&wp2=${waypoint(wp2)}`)
         .then(response => {
           console.log(response.data);
-          setRoutes(response.data);
         }
       );
     }
