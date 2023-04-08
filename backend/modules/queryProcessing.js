@@ -4,7 +4,7 @@ const MODE = (option) => `mode=${option};pedestrian`; // mode=[fastest, shortest
 function waypointsQuery(query) {
     let waypoints = [];
     Object.keys(query).forEach((key) => {
-        if (/^wp\d+$/.test(key)) { // regex for wp0, wp1, wp2, ...
+        if (/^wp$/.test(key)) {
             waypoints.push(query[key]);
         }
     });

@@ -13,6 +13,7 @@ The application provides accessible routes for various modes of transportation s
 ## For Development
 * npm run frontend
 * npm run backend
+* [Internal Documentation](https://erikluu.notion.site/Backend-Reference-cf7a4b5bf4e74df686fd18d05d67d10c)
 
 ## More Details
 Cal Poly 2023 Senior Project   

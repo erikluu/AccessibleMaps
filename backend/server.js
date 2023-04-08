@@ -12,52 +12,55 @@ const port = 4000;
 const app = express();
 const polyline = require('./modules/polyline');
 const queryProcessing = require('./modules/queryProcessing');
+const { check, validationResult } = require('express-validator');
 
 // Middleware
 app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 
 // Routes
-app.get('/api/route', async (req, res) => {
-  // https://developer.here.com/documentation/routing-api/api-reference-swagger.html
-  /* parameters: 
-    transportMode=pedestrian[0.5...2] <- speed
-    return=elevation,polyline,summary
-    origin=''
-    destination=''
-    via=''
-    routingMode=[fastest, shortest]
-    alternatives=[0...6]
-    units=[metric, imperial]
-    spans=length,duration,names,walkAttributes,streetAttributes,routeNumbers
-  */
+app.get('/api/route',[
+  check('alternatives').isInt({ min: 0, max: 6 }),
+  check('routingMode').isIn(['fastest', 'shortest']),
+  check('transportMode').isFloat({ min: 0.5, max: 2 }),
+  check('units').isIn(['metric', 'imperial']),
+  check('wp').custom((value, { req }) => {
+    const wpParams = Array.isArray(req.query.wp) ? req.query.wp : [req.query.wp];
+    if (wpParams.filter(p => p === 'wp').length < 2) {
+      throw new Error('At least two wp query parameters are required');
+    }
+    return true;
+  })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
   const url = queryProcessing.formatURL(req.query);
-  
-  res.send(waypoints);
+    
+  https.get(url, (response) => {
+    let data;
 
-  // const { unit, wp0, wp1 } = req.query;
-  // const url = `https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin=${wp0}&destination=${wp1}&return=elevation,polyline,summary&apiKey=${process.env.HERE_API_KEY}`;
+    response.on('data', (chunk) => {
+      data = chunk;
+    });
 
-  // https.get(url, (response) => {
-  //   let data;
+    response.on('end', () => {
+      const result = JSON.parse(data);
+      res.send(result);
+    });
 
-  //   response.on('data', (chunk) => {
-  //     data = chunk;
-  //   });
-
-  //   response.on('end', () => {
-  //     const result = JSON.parse(data);
-  //     res.send(result);
-  //   });
-
-  // }).on('error', (err) => {
-  //   console.log(err);
-  //   res.status(500).send('Error');
-  // });
+  }).on('error', (err) => {
+    console.log(err);
+    res.status(500).send('HERE API error');
+  });
 });
 
-app.get('/api/decodePolyline', async (req, res) => {
+app.get('/api/decodePolyline',[
+  check('polyline').isString()
+]
+, async (req, res) => {
   const { polyline } = req.query;
   const decoded = polyline.decode(polyline);
   res.send(decoded);
