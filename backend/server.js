@@ -22,9 +22,7 @@ app.use(express.json());
 app.get('/api/route',[
   check('alternatives').optional().isInt({ min: 0, max: 6 }),
   check('return').optional().isIn(['elevation', 'polyline', 'summary']),
-  check('routingMode').optional().isIn(['fastest', 'shortest']),
   check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers']),
-  check('speed').optional().isFloat({ min: 0.5, max: 2 }),
   check('units').optional().isIn(['metric', 'imperial']),
   check('wp').custom((_value, { req }) => {
     // filter out all query parameters that are not waypoints
@@ -79,6 +77,8 @@ app.get('/api/decodePolyline',[
   const decoded = polyline.decode(polyline);
   res.send(decoded);
 });
+
+app.get('/api')
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
