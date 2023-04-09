@@ -1,22 +1,56 @@
+// Required packages and modules
 const express = require('express');
 const cors = require('cors');
 const https = require('https');
-require('dotenv').config();
+const dotenv = require('dotenv');
 
-const polyline = require('./polyline');
+// Load environment variables
+dotenv.config();
 
+// Constants and variables
 const port = 4000;
 const app = express();
-app.use(cors({origin: 'http://localhost:3000'}));
+const queryProcessing = require('./modules/queryProcessing');
+const resultProcessing = require('./modules/resultProcessing');
+const { check, validationResult } = require('express-validator');
+
+// Middleware
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 
-const baseURL = 'https://route.ls.hereapi.com/routing/7.2/calculateroute.json';
-const mode = (option) => `mode=${option};pedestrian`; // mode=[fastest, shortest, balanced]
+// Routes
+app.get('/api/route',[
+  check('alternatives').optional().isInt({ min: 0, max: 6 }),
+  check('return').optional().isIn(['elevation', 'polyline', 'summary']),
+  check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers']),
+  check('units').optional().isIn(['metric', 'imperial']),
+  check('wp').custom((_value, { req }) => {
+    // filter out all query parameters that are not waypoints
+    const waypoints = Object.keys(req.query).filter((key) => /^wp\d+$/.test(key));
 
-app.get('/api/route', async (req, res) => {
-  const { unit, wp0, wp1 } = req.query;
-  const url = `https://router.hereapi.com/v8/routes?transportMode=pedestrian&origin=${wp0}&destination=${wp1}&return=elevation,polyline,summary&apiKey=${process.env.HERE_API_KEY}`;
+    // check if there are at least 2 waypoints
+    if (waypoints.length < 2) {
+      throw new Error('At least 2 waypoints are required');
+    }    
 
+    // check if all waypoints are valid coordinates
+    waypoints.forEach((waypoint) => {
+      const coordinates = req.query[waypoint];
+      if (coordinates.split(',').length !== 2) {
+        throw new Error(`Invalid waypoint formatting: ${waypoint}. Check if it is in the format "lat,lng"`);
+      }
+    });
+
+    return true;
+  })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const url = queryProcessing.formatURL(req.query);
+    
   https.get(url, (response) => {
     let data;
 
@@ -26,19 +60,15 @@ app.get('/api/route', async (req, res) => {
 
     response.on('end', () => {
       const result = JSON.parse(data);
-      res.send(result);
+      // res.status(200).send(result);
+      const decoded = resultProcessing.decodePolyline(result);
+      res.status(200).send(decoded);
     });
 
   }).on('error', (err) => {
     console.log(err);
-    res.status(500).send('Error');
+    res.status(500).send('HERE API error');
   });
-});
-
-app.get('/api/decodePolyline', async (req, res) => {
-  const { polyline } = req.query;
-  const decoded = polyline.decode(polyline);
-  res.send(decoded);
 });
 
 app.listen(port, () => {
