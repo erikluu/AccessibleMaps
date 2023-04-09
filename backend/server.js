@@ -78,8 +78,6 @@ app.get('/api/decodePolyline',[
   res.send(decoded);
 });
 
-app.get('/api')
-
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
