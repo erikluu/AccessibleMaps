@@ -10,8 +10,8 @@ dotenv.config();
 // Constants and variables
 const port = 4000;
 const app = express();
-const polyline = require('./modules/polyline');
 const queryProcessing = require('./modules/queryProcessing');
+const resultProcessing = require('./modules/resultProcessing');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
@@ -60,22 +60,15 @@ app.get('/api/route',[
 
     response.on('end', () => {
       const result = JSON.parse(data);
-      res.status(200).send(result);
+      // res.status(200).send(result);
+      const decoded = resultProcessing.decodePolyline(result);
+      res.status(200).send(decoded);
     });
 
   }).on('error', (err) => {
     console.log(err);
     res.status(500).send('HERE API error');
   });
-});
-
-app.get('/api/decodePolyline',[
-  check('polyline').isString()
-]
-, async (req, res) => {
-  const { polyline } = req.query;
-  const decoded = polyline.decode(polyline);
-  res.send(decoded);
 });
 
 app.listen(port, () => {
