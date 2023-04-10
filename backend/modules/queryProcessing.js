@@ -1,5 +1,13 @@
+/*
+    This module is responsible for processing the query object
+    and formatting it into a URL string
+*/
+
 const BASE_URL = 'https://router.hereapi.com/v8/routes';
 
+/* 
+    Format the waypoints into a URL string
+*/
 function formatWaypoints(query) {
     let waypointsCount = 0;
     let waypoints = [];
@@ -24,7 +32,9 @@ function formatWaypoints(query) {
     return waypointsQuery;
 }
 
-// turn all keys in query object into a string
+/*
+    Format the rest of the query object into a URL string
+*/
 function formatRest(defaultQuery, query) {
     let rest = '';
     Object.keys(defaultQuery).forEach((key) => {
@@ -39,12 +49,14 @@ function formatRest(defaultQuery, query) {
 
     return rest;
 }
-
+/*
+    Format the query object into a URL string
+*/
 function formatURL(query) {
     const defaultQuery = {
-        alternatives: 3,
+        alternatives: 0,
         return: "elevation,polyline,summary",
-        spans: "length,duration,routeNumbers",
+        spans: "length,duration,segmentRef",
         transportMode: "pedestrian",
         units: "imperial"
     };
