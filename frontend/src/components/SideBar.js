@@ -1,5 +1,4 @@
 import React from "react";
-
 import Path from "./Path";
 
 const SideBar = props => {
