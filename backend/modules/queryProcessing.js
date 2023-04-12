@@ -56,11 +56,10 @@ function formatURL(query) {
     const defaultQuery = {
         alternatives: 0,
         return: "elevation,polyline,summary",
-        spans: "length,duration,segmentRef",
+        spans: "length,duration", // got rid of segmentRef, which is not supported by the free tier and sometimes messes up the JSON response causing a crash
         transportMode: "pedestrian",
         units: "imperial"
     };
-    if (query.speed) { delete query.speed; }
 
     const waypoints = formatWaypoints(query);
     const rest = formatRest(defaultQuery, query);
