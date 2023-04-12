@@ -46,9 +46,13 @@ function MapView() {
   const [routes, setRoutes] = useState(null); // list of route objects 
 
   const addLoc = (item) => {
-    new mapboxgl.Marker({
+    const coords = item.geometry.coordinates;
+    const marker = new mapboxgl.Marker({
       draggable: true,
-    }).setLngLat(item.geometry.coordinates).addTo(map.current);
+    })
+    .setLngLat(coords)
+    .addTo(map.current);
+
     return item.place_name;
   };
 
@@ -115,27 +119,27 @@ function MapView() {
 
 
       // fit route to screen
-      document.getElementById('zoomto').addEventListener('click', () => {  
-        const coordinates = route1coords;
+      // document.getElementById('zoomto').addEventListener('click', () => {  
+      //   const coordinates = route1coords;
 
-        const bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
-        for (const coord of coordinates) {
-          bounds.extend(coord);
-        } 
-        map.current.fitBounds(bounds, {
-          padding: 20
-        });
-      });
+      //   const bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
+      //   for (const coord of coordinates) {
+      //     bounds.extend(coord);
+      //   } 
+      //   map.current.fitBounds(bounds, {
+      //     padding: 20
+      //   });
+      // });
 
-      document.getElementById('routing').addEventListener('click', () => {
-        const markers = document.querySelectorAll('[aria-label="Map marker"]');
-        //const markers = document.getElementsByClassName("mapboxgl-ctrl-icon");
+      // document.getElementById('routing').addEventListener('click', () => {
+      //   const markers = document.querySelectorAll('[aria-label="Map marker"]');
+      //   //const markers = document.getElementsByClassName("mapboxgl-ctrl-icon");
       
-        for(let i = 0; i < markers.length; i++) {
-            console.log("marker ", i);
-            console.log(markers[i]);
-        }
-      });
+      //   for(let i = 0; i < markers.length; i++) {
+      //       console.log("marker ", i);
+      //       console.log(markers[i]);
+      //   }
+      // });
 
     });
 
@@ -197,11 +201,6 @@ function MapView() {
 
   return (
     <div>
-      <div className="sidebar">
-        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
-      </div>
-      <button id="zoomto" className="sidebar2">test zoom</button>
-      <button onClick={getRoute} id="routing" className="sidebar3">Find Route</button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
