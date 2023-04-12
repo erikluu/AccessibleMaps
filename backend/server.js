@@ -1,7 +1,6 @@
 // Required packages and modules
 const express = require('express');
 const cors = require('cors');
-const https = require('https');
 const dotenv = require('dotenv');
 
 // Load environment variables
@@ -10,8 +9,7 @@ dotenv.config();
 // Constants and variables
 const port = 4000;
 const app = express();
-const queryProcessing = require('./modules/queryProcessing');
-const resultProcessing = require('./modules/resultProcessing');
+const routeProcessing = require('./modules/routeProcessing');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
@@ -22,7 +20,7 @@ app.use(express.json());
 app.get('/api/route',[
   check('alternatives').optional().isInt({ min: 0, max: 6 }),
   check('return').optional().isIn(['elevation', 'polyline', 'summary']),
-  check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers']),
+  check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers', 'segmentId', 'segmentRef']),
   check('units').optional().isIn(['metric', 'imperial']),
   check('wp').custom((_value, { req }) => {
     // filter out all query parameters that are not waypoints
@@ -45,30 +43,15 @@ app.get('/api/route',[
   })
 ], async (req, res) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+  if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
+
+  const route = await routeProcessing.getRoute(req.query);
+  if (route === 'HERE API error') {
+    res.status(500).send('HERE API error');
+  } else {
+    res.status(200).json(route);
   }
 
-  const url = queryProcessing.formatURL(req.query);
-    
-  https.get(url, (response) => {
-    let data;
-
-    response.on('data', (chunk) => {
-      data = chunk;
-    });
-
-    response.on('end', () => {
-      const result = JSON.parse(data);
-      // res.status(200).send(result);
-      const decoded = resultProcessing.decodePolyline(result);
-      res.status(200).send(decoded);
-    });
-
-  }).on('error', (err) => {
-    console.log(err);
-    res.status(500).send('HERE API error');
-  });
 });
 
 app.listen(port, () => {
