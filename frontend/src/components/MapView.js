@@ -4,6 +4,7 @@ import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 //import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
 import axios from 'axios'
 
+console.log(process.env);
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
 const defLNG = -120.6252; // default lat/long is set to SLO
@@ -41,10 +42,8 @@ function MapView() {
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
 
-  const [waypoints, setWaypoints] = useState([]);
-  const [routePath, setRoutePath] = useState([]);
-  const [routeDistance, setRouteDistance] = useState(0);
-  const [routeDistanceUnit, setRouteDistanceUnit] = useState('mi'); // 'km' or 'mi'
+  const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
+  const [routes, setRoutes] = useState(null); // list of route objects 
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
@@ -180,11 +179,30 @@ function MapView() {
     });
   });
 
+    // get route from /api/route
+    const getRoute = async () => {
+      const wp0 = [35.290401, -120.669763];
+      const wp1 = [35.2813, -120.6608];
+      const wp2 = [35.282592, -120.66529];
+      const unit = "imperial";
+  
+      // [lat, lng] -> "lat,lng"
+      const waypoint = (wp) => {
+        return `${wp[0]},${wp[1]}`;
+      }
+  
+      // send waypoints to server api/route
+      await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&wp2=${waypoint(wp2)}`)
+        .then(response => {
+          console.log(response.data);
+        }
+      );
+    }
+
   return (
     <div>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
 }
-
 export default MapView;

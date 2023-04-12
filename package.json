@@ -2,6 +2,7 @@
   "name": "accessiblemaps",
   "version": "0.1.0",
   "private": true,
+<<<<<<< HEAD
   "dependencies": {
     "@fontsource/roboto": "^4.5.8",
     "@mapbox/mapbox-gl-geocoder": "^5.0.1",
@@ -20,28 +21,13 @@
     "src": "^1.1.2",
     "web-vitals": "^2.1.4"
   },
+=======
+>>>>>>> a49e124a4fdbd121290b173b9d2f4bec2f307705
   "scripts": {
-    "frontend": "react-scripts start",
-    "backend": "python src/backend/server.py",
-    "build": "react-scripts build",
-    "test": "react-scripts test"
+    "frontend": "cd frontend && npm start",
+    "backend": "cd backend && nodemon app.js"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "devDependencies": {
+    "dotenv": "^16.0.3"
   }
 }
