@@ -2,17 +2,33 @@ import { useMemo, useState } from 'react';
 import MaterialReactTable from 'material-react-table';
 
 const INITIAL_STATE = [
-  {loc: 'Kennedy Library, San Luis Obispo, CA 93405'},
-  {loc: '776 Chorro St, San Luis Obispo, CA 93401'}
+  {loc: '', id: 1},
+  {loc: '', id: 2}
 ]
 
 const Path = props => {
-  const [users, setUsers] = useState(INITIAL_STATE)
+  const [stops, setStops] = useState(INITIAL_STATE)
+
+  const addStop = () => {
+    const data = {
+      loc: '',
+      id: stops[stops.length - 1].id + 1
+    };
+    setStops([...stops, data]);
+  };
+
+  // const renderUsers = () => {
+  //   return users.map(({loc}) => {
+  //     return <tr key={loc} className="geocoder_tr" >
+  //     <td style={{ maxWidth: '19vw', padding: '2%', border: '1px solid black', borderRadius: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loc}</td>
+  //   </tr>
+  //   });
+  // }
 
   const renderUsers = () => {
-    return users.map(({loc}) => {
-      return <tr key={loc} >
-      <td style={{ maxWidth: '19vw', padding: '2%', border: '1px solid black', borderRadius: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loc}</td>
+    return stops.map(s => {
+      return <tr key={s.loc} >
+        <td className="geocoder_td"></td>
     </tr>
     });
   }
@@ -25,10 +41,7 @@ const Path = props => {
             {renderUsers()}
         </tbody>
       </table>
-      <form>
-        <label htmlFor='loc'></label>
-        <input style={{ width: '92.8%', padding: '3%', border: '1px solid black', borderRadius: '8px' }} type='text' placeholder='Add destination'/>
-      </form>
+      <button onClick={addStop}>Add Destination</button>
     </div>
   );
 };
