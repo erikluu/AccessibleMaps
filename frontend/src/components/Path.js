@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import MaterialReactTable from 'material-react-table';
 
 const INITIAL_STATE = [
@@ -6,7 +6,9 @@ const INITIAL_STATE = [
   {loc: '', id: 2}
 ]
 
-const Path = props => {
+const Path = (props) => {
+  console.log("path props", props)
+
   const [stops, setStops] = useState(INITIAL_STATE)
 
   const addStop = () => {
@@ -27,7 +29,7 @@ const Path = props => {
 
   const renderUsers = () => {
     return stops.map(s => {
-      return <tr key={s.loc} >
+      return <tr key={s.id} >
         <td className="geocoder_td"></td>
     </tr>
     });

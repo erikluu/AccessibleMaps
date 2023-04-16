@@ -10,19 +10,25 @@ import MapView from "./components/MapView";
   href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 />;
 
-function App() {
+const App = () => {
+  console.log("updated...");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const handleViewSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const [map, setMap] = useState();
+  const updateMap = (map) => {
+    setMap(map);
+  };
+
   return (
-    <div>
-      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} />
-      <MapView />
+    <div className="top-level">
+      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} mapData={map} />
+      <MapView getMap={updateMap} />
     </div>
   );
-}
+};
 
 export default App;
