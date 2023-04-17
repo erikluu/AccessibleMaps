@@ -11,9 +11,6 @@ const defLAT = 35.2628;
 const defZoom = 9.00;
 
 const MapView = (props) => {
-
-  console.log("map props", props);
-
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [lng, setLng] = useState(defLNG);
@@ -63,6 +60,12 @@ const MapView = (props) => {
     );
 
     map.current.on("load", () => {});
+
+    props.getMap({
+      map: map.current,
+      mapboxgl,
+      addLoc
+    });
   });
 
   // // get route
@@ -121,17 +124,13 @@ const MapView = (props) => {
   //   const stops = document.getElementsByClassName("geocoder_td");
   //   for (let i  = 0; i < stops.length; i++) {
   //     const stop = stops[i];
+  //     console.log('nice', stop);
   //     if (!stop.hasChildNodes())
   //       stops[i].appendChild(geocoder.onAdd(map.current));
   //   }
   // });
 
 
-  // props.getMap({
-  //   map: map.current,
-  //   token: mapboxgl.accessToken,
-  //   addLoc
-  // });
 
   return (
     <div>

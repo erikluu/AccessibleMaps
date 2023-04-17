@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from 'react';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import MaterialReactTable from 'material-react-table';
+import parse from 'html-react-parser';
+import parseHTML from 'jquery';
 
 const INITIAL_STATE = [
   {loc: '', id: 1},
@@ -7,9 +10,14 @@ const INITIAL_STATE = [
 ]
 
 const Path = (props) => {
-  console.log("path props", props)
+  const map = props.mapData;
+  console.log("path: map props", map);
 
-  const [stops, setStops] = useState(INITIAL_STATE)
+
+
+  const [stops, setStops] = useState(INITIAL_STATE);
+  const [geocoders, setGeocoders] = useState([]);
+
 
   const addStop = () => {
     const data = {
@@ -19,20 +27,49 @@ const Path = (props) => {
     setStops([...stops, data]);
   };
 
-  // const renderUsers = () => {
-  //   return users.map(({loc}) => {
-  //     return <tr key={loc} className="geocoder_tr" >
-  //     <td style={{ maxWidth: '19vw', padding: '2%', border: '1px solid black', borderRadius: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{loc}</td>
-  //   </tr>
-  //   });
-  // }
-
   const renderUsers = () => {
-    return stops.map(s => {
-      return <tr key={s.id} >
-        <td className="geocoder_td"></td>
-    </tr>
+    const geocoderPlaceholder = new MapboxGeocoder({
+      accessToken: map.mapboxgl.accessToken,
+      getItemValue: map.addLoc,
+      marker: false,
+      mapboxgl: map.mapboxgl,
     });
+
+    return stops.map(s => {
+      const stop = <tr key={s.id} >
+        <td className="geocoder_td" >
+          <div className="mapboxgl-ctrl-geocoder mapboxgl-ctrl" id="placeholder">
+            {parse(geocoderPlaceholder.onAdd(map.map).innerHTML)}
+          </div>
+        </td>
+      </tr>;
+      
+      return stop;
+    });
+  }
+
+  if (!map) {
+    return <div></div>;
+  }
+
+  const allStops = document.getElementsByClassName("geocoder_td");
+  for (let i  = 0; i < allStops.length; i++) {
+    const newGeocoder = new MapboxGeocoder({
+      accessToken: map.mapboxgl.accessToken,
+      getItemValue: map.addLoc,
+      marker: false,
+      mapboxgl: map.mapboxgl,
+    });
+
+    const stop = allStops[i];
+    console.log('nice', stop);
+    if (stop.hasChildNodes()) {
+      if (stop.firstChild.id == "placeholder") {
+        console.log("GOOOOOOOOOOOOOOOD");
+        stop.removeChild(stop.firstChild);
+        stop.appendChild(newGeocoder.onAdd(map.current));
+      }
+    }
   }
 
   return (
