@@ -49,18 +49,26 @@ function formatRest(defaultQuery, query) {
 
     return rest;
 }
+
+// /*
+//     Format the avoidAreas into a URL string
+// */
+// function formatAvoidAreas(query) {
+//     let avoidAreas = '';
+//     if (query.avoidAreas) {
+//         avoidAreas = `&avoidAreas=${query.avoidAreas}`;
+
 /*
     Format the query object into a URL string
 */
-function formatURL(query) {
+function formatInitialURL(query) {
     const defaultQuery = {
         alternatives: 0,
         return: "elevation,polyline,summary",
-        spans: "length,duration,segmentRef",
+        spans: "segmentRef", // got rid of segmentRef, which is not supported by the free tier and sometimes messes up the JSON response causing a crash
         transportMode: "pedestrian",
         units: "imperial"
     };
-    if (query.speed) { delete query.speed; }
 
     const waypoints = formatWaypoints(query);
     const rest = formatRest(defaultQuery, query);
@@ -71,5 +79,5 @@ function formatURL(query) {
 }
 
 module.exports = {
-    formatURL
+    formatInitialURL
 };
