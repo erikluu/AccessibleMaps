@@ -20,16 +20,16 @@ function decodePolylines(data) {
 * https://en.wikipedia.org/wiki/Haversine_formula
 */
 function getDistance(firstPoint, secondPoint) {
-    const lat0 = firstPoint[0];
-    const lng0 = firstPoint[1];
-    const lat1 = secondPoint[0];
-    const lng1 = secondPoint[1];
+    const lat1 = firstPoint[0];
+    const lng1 = firstPoint[1];
+    const lat2 = secondPoint[0];
+    const lng2 = secondPoint[1];
 
     const R = 6371e3; // radius of the Earth in meters
     const φ1 = lat1 * Math.PI/180; // convert latitudes to radians
     const φ2 = lat2 * Math.PI/180;
     const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lon2-lon1) * Math.PI/180;
+    const Δλ = (lng2-lng1) * Math.PI/180;
 
     const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
                 Math.cos(φ1) * Math.cos(φ2) *
@@ -46,9 +46,8 @@ function calculateGrade(firstPoint, secondPoint) {
     return elevationChange / distance * 100;
 }
 
-function checkGrade(routes, maxGrade=.10) {
+function getSteepSegments(routes, maxGrade) {
     steepSegments = [];
-
     routes.forEach((route) => {
         route.sections.forEach((section) => {
             for (i = 1; i < section.polyline.length; i++) {
@@ -63,9 +62,7 @@ function checkGrade(routes, maxGrade=.10) {
     return steepSegments;
 }
 
-function getInitialRoute(query) {
-    const url = queryProcessing.formatURL(query);
-
+function callHERE(url) {
     return new Promise((resolve, reject) => {
         https.get(url, (response) => {
             let data;
@@ -88,9 +85,13 @@ function getInitialRoute(query) {
 }
 
 function getRoute(query) {
-    const route = getInitialRoute(query);
+    const initialURL = queryProcessing.formatInitialURL(query);
     
-    return route;
+    const routeObject = callHERE(initialURL);
+    // const steepSegments = getSteepSegments(routeObject, 10);
+
+    
+    return routeObject;
 }
 
 module.exports = {
