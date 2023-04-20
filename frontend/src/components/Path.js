@@ -11,13 +11,22 @@ const INITIAL_STATE = [
 
 const Path = (props) => {
   const map = props.mapData;
-  console.log("path: map props", map);
-
-
+  const updateMasterPath = props.updateStops;
 
   const [stops, setStops] = useState(INITIAL_STATE);
   const [geocoders, setGeocoders] = useState([]);
 
+  const addLoc = (item) => {
+    const coords = item.geometry.coordinates;
+    updateMasterPath(coords);
+    const marker = new map.mapboxgl.Marker({
+      draggable: true,
+    })
+    .setLngLat(coords)
+    .addTo(map.map);
+
+    return item.place_name;
+  };
 
   const addStop = () => {
     const data = {
@@ -30,7 +39,7 @@ const Path = (props) => {
   const renderUsers = () => {
     const geocoderPlaceholder = new MapboxGeocoder({
       accessToken: map.mapboxgl.accessToken,
-      getItemValue: map.addLoc,
+      getItemValue: addLoc,
       marker: false,
       mapboxgl: map.mapboxgl,
     });
@@ -39,7 +48,7 @@ const Path = (props) => {
       const stop = <tr key={s.id} >
         <td className="geocoder_td" >
           <div className="mapboxgl-ctrl-geocoder mapboxgl-ctrl" id="placeholder">
-            {parse(geocoderPlaceholder.onAdd(map.map).innerHTML)}
+            {parse(geocoderPlaceholder.onAdd(map.map).outerHTML)}
           </div>
         </td>
       </tr>;
@@ -56,18 +65,17 @@ const Path = (props) => {
   for (let i  = 0; i < allStops.length; i++) {
     const newGeocoder = new MapboxGeocoder({
       accessToken: map.mapboxgl.accessToken,
-      getItemValue: map.addLoc,
+      getItemValue: addLoc,
       marker: false,
       mapboxgl: map.mapboxgl,
     });
 
     const stop = allStops[i];
-    console.log('nice', stop);
     if (stop.hasChildNodes()) {
-      if (stop.firstChild.id == "placeholder") {
+      if (stop.firstChild.id === "placeholder") {
         console.log("GOOOOOOOOOOOOOOOD");
         stop.removeChild(stop.firstChild);
-        stop.appendChild(newGeocoder.onAdd(map.current));
+        stop.appendChild(newGeocoder.onAdd(map.map));
       }
     }
   }

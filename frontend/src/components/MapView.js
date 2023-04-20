@@ -20,6 +20,9 @@ const MapView = (props) => {
   const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
   const [routes, setRoutes] = useState(null); // list of route objects 
 
+  const currentPath = props.stops;
+  console.log("path:", currentPath);
+
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
     const marker = new mapboxgl.Marker({
@@ -64,7 +67,6 @@ const MapView = (props) => {
     props.getMap({
       map: map.current,
       mapboxgl,
-      addLoc
     });
   });
 
@@ -119,18 +121,6 @@ const MapView = (props) => {
       }
     );
   }
-
-  // useEffect(() => {
-  //   const stops = document.getElementsByClassName("geocoder_td");
-  //   for (let i  = 0; i < stops.length; i++) {
-  //     const stop = stops[i];
-  //     console.log('nice', stop);
-  //     if (!stop.hasChildNodes())
-  //       stops[i].appendChild(geocoder.onAdd(map.current));
-  //   }
-  // });
-
-
 
   return (
     <div>
