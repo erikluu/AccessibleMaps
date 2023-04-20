@@ -22,17 +22,13 @@ const App = () => {
   };
 
   const [stops, setStops] = useState([]);
-  const updateStops = (stop) => {
-    const data = {
-      id: 'TODO',
-      coords: stop
-    };
-    setStops([...stops, data]);
+  const updateStops = (stops) => {
+    setStops(stops);
   };
  
   return (
     <div className="top-level">
-      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} mapData={map} updateStops={updateStops} />
+      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} mapData={map} updateStops={updateStops} stops={stops} />
       <MapView getMap={updateMap} stops={stops} />
     </div>
   );

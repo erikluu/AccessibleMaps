@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import MaterialReactTable from 'material-react-table';
 import parse from 'html-react-parser';
@@ -11,29 +11,37 @@ const INITIAL_STATE = [
 
 const Path = (props) => {
   const map = props.mapData;
-  const updateMasterPath = props.updateStops;
+  const updateStops = props.updateStops;
+  
+  const [searchBars, setSearchBars] = useState(INITIAL_STATE);
+  const addSearchBar = () => {
+    const data = {
+      loc: '',
+      id: searchBars[searchBars.length - 1].id + 1
+    };
+    setSearchBars([...searchBars, data]);
+  };
 
-  const [stops, setStops] = useState(INITIAL_STATE);
-  const [geocoders, setGeocoders] = useState([]);
+  const [coords, setCoords] = useState([]);
+  const addCoords = (coord) => {
+    const data = {
+      id: "TODO",
+      loc: coord
+    };
+    setCoords([...coords, data]);
+  };
 
   const addLoc = (item) => {
-    const coords = item.geometry.coordinates;
-    updateMasterPath(coords);
+    const newCoords = item.geometry.coordinates;
+    console.log('adding...');
+    addCoords(newCoords);
     const marker = new map.mapboxgl.Marker({
       draggable: true,
     })
-    .setLngLat(coords)
+    .setLngLat(newCoords)
     .addTo(map.map);
 
     return item.place_name;
-  };
-
-  const addStop = () => {
-    const data = {
-      loc: '',
-      id: stops[stops.length - 1].id + 1
-    };
-    setStops([...stops, data]);
   };
 
   const renderUsers = () => {
@@ -44,8 +52,8 @@ const Path = (props) => {
       mapboxgl: map.mapboxgl,
     });
 
-    return stops.map(s => {
-      const stop = <tr key={s.id} >
+    return searchBars.map(s => {
+      const searchBar = <tr key={s.id} >
         <td className="geocoder_td" >
           <div className="mapboxgl-ctrl-geocoder mapboxgl-ctrl" id="placeholder">
             {parse(geocoderPlaceholder.onAdd(map.map).outerHTML)}
@@ -53,16 +61,23 @@ const Path = (props) => {
         </td>
       </tr>;
       
-      return stop;
+      return searchBar;
     });
   }
+
+  console.log(coords);
+
+  useEffect(() => {
+    updateStops(coords)
+  }, [coords]);
+
 
   if (!map) {
     return <div></div>;
   }
 
-  const allStops = document.getElementsByClassName("geocoder_td");
-  for (let i  = 0; i < allStops.length; i++) {
+  const allSearchBars = document.getElementsByClassName("geocoder_td");
+  for (let i  = 0; i < allSearchBars.length; i++) {
     const newGeocoder = new MapboxGeocoder({
       accessToken: map.mapboxgl.accessToken,
       getItemValue: addLoc,
@@ -70,12 +85,12 @@ const Path = (props) => {
       mapboxgl: map.mapboxgl,
     });
 
-    const stop = allStops[i];
-    if (stop.hasChildNodes()) {
-      if (stop.firstChild.id === "placeholder") {
+    const searchBar = allSearchBars[i];
+    if (searchBar.hasChildNodes()) {
+      if (searchBar.firstChild.id == "placeholder") {
         console.log("GOOOOOOOOOOOOOOOD");
-        stop.removeChild(stop.firstChild);
-        stop.appendChild(newGeocoder.onAdd(map.map));
+        searchBar.removeChild(searchBar.firstChild);
+        searchBar.appendChild(newGeocoder.onAdd(map.map));
       }
     }
   }
@@ -88,7 +103,7 @@ const Path = (props) => {
             {renderUsers()}
         </tbody>
       </table>
-      <button onClick={addStop}>Add Destination</button>
+      <button onClick={addSearchBar}>Add Destination</button>
     </div>
   );
 };
