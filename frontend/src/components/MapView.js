@@ -21,7 +21,6 @@ const MapView = (props) => {
   const [routes, setRoutes] = useState(null); // list of route objects 
 
   const currentPath = props.stops;
-  //console.log("path:", currentPath);
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;

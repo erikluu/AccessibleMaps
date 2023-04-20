@@ -4,16 +4,19 @@ import MaterialReactTable from 'material-react-table';
 import parse from 'html-react-parser';
 import parseHTML from 'jquery';
 
-const INITIAL_STATE = [
+const INITIAL_SEARCHBARS = [
   {loc: '', id: 1},
   {loc: '', id: 2}
-]
+];
+const INITIAL_COORDS = [];
 
 const Path = (props) => {
   const map = props.mapData;
   const updateStops = props.updateStops;
   
-  const [searchBars, setSearchBars] = useState(INITIAL_STATE);
+  const [newLoc, setNewLoc] = useState();
+
+  const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
   const addSearchBar = () => {
     const data = {
       loc: '',
@@ -22,7 +25,7 @@ const Path = (props) => {
     setSearchBars([...searchBars, data]);
   };
 
-  const [coords, setCoords] = useState([]);
+  const [coords, setCoords] = useState(INITIAL_COORDS);
   const addCoords = (coord) => {
     const data = {
       id: "TODO",
@@ -32,9 +35,9 @@ const Path = (props) => {
   };
 
   const addLoc = (item) => {
+    console.log(item);
     const newCoords = item.geometry.coordinates;
-    console.log('adding...');
-    addCoords(newCoords);
+    setNewLoc(newCoords);
     const marker = new map.mapboxgl.Marker({
       draggable: true,
     })
@@ -65,7 +68,12 @@ const Path = (props) => {
     });
   }
 
-  console.log(coords);
+  useEffect(() => {
+    if (!newLoc)
+      return;
+    addCoords(newLoc);
+    setNewLoc(undefined);
+  }, [newLoc]);
 
   useEffect(() => {
     updateStops(coords)
