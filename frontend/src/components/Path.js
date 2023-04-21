@@ -47,6 +47,27 @@ const Path = (props) => {
     return item.place_name;
   };
 
+  const updateGeocoders = () => {
+    const allSearchBars = document.getElementsByClassName("geocoder_td");
+      for (let i  = 0; i < allSearchBars.length; i++) {
+        const newGeocoder = new MapboxGeocoder({
+          accessToken: map.mapboxgl.accessToken,
+          getItemValue: addLoc,
+          marker: false,
+          mapboxgl: map.mapboxgl,
+        });
+
+        const searchBar = allSearchBars[i];
+        if (searchBar.hasChildNodes()) {
+          if (searchBar.firstChild.id == "placeholder") {
+            console.log("GOOOOOOOOOOOOOOOD");
+            searchBar.removeChild(searchBar.firstChild);
+            searchBar.appendChild(newGeocoder.onAdd(map.map));
+          }
+        }
+      }
+  };
+
   const renderUsers = () => {
     const geocoderPlaceholder = new MapboxGeocoder({
       accessToken: map.mapboxgl.accessToken,
@@ -79,29 +100,19 @@ const Path = (props) => {
     updateStops(coords)
   }, [coords]);
 
+  useEffect(() => {
+    updateGeocoders();
+  }, []);
+
+  useEffect(() => {
+    updateGeocoders();
+  }, [searchBars]);
+
 
   if (!map) {
     return <div></div>;
   }
 
-  const allSearchBars = document.getElementsByClassName("geocoder_td");
-  for (let i  = 0; i < allSearchBars.length; i++) {
-    const newGeocoder = new MapboxGeocoder({
-      accessToken: map.mapboxgl.accessToken,
-      getItemValue: addLoc,
-      marker: false,
-      mapboxgl: map.mapboxgl,
-    });
-
-    const searchBar = allSearchBars[i];
-    if (searchBar.hasChildNodes()) {
-      if (searchBar.firstChild.id == "placeholder") {
-        console.log("GOOOOOOOOOOOOOOOD");
-        searchBar.removeChild(searchBar.firstChild);
-        searchBar.appendChild(newGeocoder.onAdd(map.map));
-      }
-    }
-  }
 
   return (
     <div style={{ margin: '5px' }}>
