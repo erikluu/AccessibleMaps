@@ -18,21 +18,39 @@ code {
   width: 100%;
 }
 
-.sidebar {
-  position: absolute;
-  left: -20vw;
-  height: 100%;
-  width: 20vw;
-  transition: left 0.1s ease-in-out;
-  background-color: #fff;
-  box-shadow: 1px 0px 6px rgb(75, 75, 75);
-  z-index: 10;
+.navlist {
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden; 
+  z-index: 2;
+}
+
+.navbar {
+  text-align: center;
+  margin: 5px;
+  width: 20vw; 
+  max-width: 20vw; 
+  min-width: 307px;
+  z-index: 1;
+}
+
+.coordinates {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  position: relative;
+  bottom: 40px;
+  left: 10px;
+  padding: 5px 10px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 18px;
+  border-radius: 3px;
+  display: none;
 }
 
 .sidebar-toggle {
   position: absolute;
   top: 47%;
-  right: -25px;
   height: 6%;
   width: 25px;
   z-index: 1;
@@ -44,97 +62,14 @@ code {
   border-color: rgb(131, 131, 131);
 }
 
-.content {
-  position: absolute;
-  top: 60px;
-  left: 0;
-  right: 0;
-  height: 100%;
-  transition: left 0.1s ease-in-out;
-  background-color: #fff;
-}
-.sidebar.open {
-  left: 0;
-}
-.content.open {
-  left: 20vw;
-}
-
-
-/* .sidebar {
-  background-color: rgba(35, 55, 75, 0.9);
-  color: #fff;
-  padding: 6px 12px;
-  font-family: monospace;
-  z-index: 1;
+.boxdraw {
+  background: rgba(56, 135, 190, 0.1);
+  border: 2px solid #3887be;
   position: absolute;
   top: 0;
   left: 0;
-  margin: 12px;
-  border-radius: 4px;
-} */
-
-.sidebar2 {
-  background-color: rgba(35, 55, 75, 0.9);
-  color: #fff;
-  padding: 6px 12px;
-  font-family: monospace;
-  z-index: 1;
-  position: absolute;
-  top: 35px;
-  left: 0;
-  margin: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.sidebar3 {
-  background-color: rgba(35, 55, 75, 0.9);
-  color: #fff;
-  padding: 6px 12px;
-  font-family: monospace;
-  z-index: 1;
-  position: absolute;
-  top: 70px;
-  left: 0;
-  margin: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-control {
-  font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-  background-color: #3386c0;
-  color: #fff;
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  z-index: 1;
-  border: none;
-  width: 200px;
-  margin-left: -100px;
-  display: block;
-  cursor: pointer;
-  padding: 10px 20px;
-  border-radius: 3px;
-}
-   
-.btn-control:hover {
-  background-color: #4ea0da;
-}
-
-.coordinates {
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  position: absolute;
-  bottom: 40px;
-  left: 10px;
-  padding: 5px 10px;
-  margin: 0;
-  font-size: 11px;
-  line-height: 18px;
-  border-radius: 3px;
-  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* .marker {
