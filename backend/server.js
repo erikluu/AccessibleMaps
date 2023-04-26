@@ -13,12 +13,14 @@ const routeProcessing = require('./modules/routeProcessing');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:3000' }));
+// app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors());
 app.use(express.json());
 
 // Routes
 app.get('/api/route',[
   check('alternatives').optional().isInt({ min: 0, max: 6 }),
+  check('macxGrade').optional().isInt({ min: 5, max: 100 }),
   check('return').optional().isIn(['elevation', 'polyline', 'summary']),
   check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers', 'segmentId', 'segmentRef']),
   check('units').optional().isIn(['metric', 'imperial']),

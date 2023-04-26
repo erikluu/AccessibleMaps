@@ -51,12 +51,20 @@ function formatRest(defaultQuery, query) {
 }
 
 // /*
-//     Format the avoidAreas into a URL string
+//     Format the avoidance bboxes into a URL string
+//     avoid[areas]=bbox1|bbox2|bbox3|...
 // */
-// function formatAvoidAreas(query) {
-//     let avoidAreas = '';
-//     if (query.avoidAreas) {
-//         avoidAreas = `&avoidAreas=${query.avoidAreas}`;
+function formatAvoidance(url, bboxes) {
+    let avoidanceQuery = url.includes('avoid[areas]') ? '|' : '&avoid[areas]=';
+    for (let i = 0; i < bboxes.length; i++) {
+        avoidanceQuery += `${bboxes[i].lng},${bboxes[i].lat},${bboxes[i].lng},${bboxes[i].lat}`;
+        if (i !== bboxes.length - 1) {
+            avoidanceQuery += '|';
+        }
+    }
+
+    return url + avoidanceQuery;
+}
 
 /*
     Format the query object into a URL string
@@ -64,8 +72,9 @@ function formatRest(defaultQuery, query) {
 function formatInitialURL(query) {
     const defaultQuery = {
         alternatives: 0,
+        maxGrade: 10,
         return: "elevation,polyline,summary",
-        spans: "segmentRef", // got rid of segmentRef, which is not supported by the free tier and sometimes messes up the JSON response causing a crash
+        // spans: "segmentRef", // got rid of segmentRef, which is not supported by the free tier and sometimes messes up the JSON response causing a crash
         transportMode: "pedestrian",
         units: "imperial"
     };
@@ -79,5 +88,6 @@ function formatInitialURL(query) {
 }
 
 module.exports = {
-    formatInitialURL
+    formatInitialURL,
+    formatAvoidance
 };
