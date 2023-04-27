@@ -4,23 +4,27 @@ import MaterialReactTable from 'material-react-table';
 import parse from 'html-react-parser';
 import parseHTML from 'jquery';
 
-const INITIAL_SEARCHBARS = [
-  {loc: '', id: 1},
-  {loc: '', id: 2}
-];
+
 const INITIAL_COORDS = [];
+const INITIAL_SEARCHBARS = [];
 
 const Path = (props) => {
-  const map = props.mapData;
-  const updateStops = props.updateStops;
-  
+  const {map, updateStops} = props;
+
   const [newLoc, setNewLoc] = useState();
 
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
-  const addSearchBar = () => {
+  const addSearchBar = (id) => {
+    let newID = id;
+    let meta = 'init';
+    if (newID == 0) {
+      newID = searchBars[searchBars.length - 1].id + 1;
+      meta = 'additional';
+    }
     const data = {
       loc: '',
-      id: searchBars[searchBars.length - 1].id + 1
+      id: newID,
+      meta
     };
     setSearchBars([...searchBars, data]);
   };
@@ -68,7 +72,7 @@ const Path = (props) => {
       }
   };
 
-  const renderUsers = () => {
+  const renderStops = () => {
     const geocoderPlaceholder = new MapboxGeocoder({
       accessToken: map.mapboxgl.accessToken,
       getItemValue: addLoc,
@@ -89,6 +93,9 @@ const Path = (props) => {
     });
   }
 
+
+  // if a new location has been added from any geocoder (triggered when newLoc is updated) 
+  // add new location to stop list
   useEffect(() => {
     if (!newLoc)
       return;
@@ -102,27 +109,32 @@ const Path = (props) => {
 
   useEffect(() => {
     updateGeocoders();
-  }, []);
-
-  useEffect(() => {
-    updateGeocoders();
   }, [searchBars]);
 
-
+  // return empty if the map hasn't initialized, need the map to create geocoders in the search bar
   if (!map) {
+    console.log("Map initializing...");
     return <div></div>;
   }
 
+  // init path to have 2 stops to begin
+  // bug: only the second search bar would appear when they were called in the same conditional
+  if (searchBars.length == 0) {
+    addSearchBar(1);
+  }
+  if (searchBars.length == 1) {
+    addSearchBar(2);
+  } 
 
   return (
     <div style={{ margin: '5px' }}>
       <h3>Navigation</h3>
       <table>
         <tbody>
-            {renderUsers()}
+            {renderStops()}
         </tbody>
       </table>
-      <button onClick={addSearchBar}>Add Destination</button>
+      <button onClick={() => addSearchBar(0)}>Add Destination</button>
     </div>
   );
 };

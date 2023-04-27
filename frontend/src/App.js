@@ -28,8 +28,8 @@ const App = () => {
  
   return (
     <div className="top-level">
-      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} mapData={map} updateStops={updateStops} stops={stops} />
-      <MapView getMap={updateMap} stops={stops} />
+      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} map={map} updateStops={updateStops} stops={stops} />
+      <MapView updateMap={updateMap} stops={stops} />
     </div>
   );
 };

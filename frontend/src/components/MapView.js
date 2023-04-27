@@ -63,7 +63,7 @@ const MapView = (props) => {
 
     map.current.on("load", () => {});
 
-    props.getMap({
+    props.updateMap({
       map: map.current,
       mapboxgl,
     });

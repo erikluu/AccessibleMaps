@@ -6,7 +6,7 @@ const SideBar = (props) => {
   if (props.isOpen) 
     return (
       <div className={sidebarClass}>
-        <Path mapData={props.mapData} updateStops={props.updateStops} stops={props.stops} />
+        <Path map={props.map} updateStops={props.updateStops} stops={props.stops} />
         <button onClick={props.toggleSidebar} className="sidebar-toggle">
           &#8249;
         </button>
