@@ -11,7 +11,8 @@ const INITIAL_SEARCHBARS = [];
 const Path = (props) => {
   const {map, updateStops} = props;
 
-  const [newLoc, setNewLoc] = useState();
+  const [newLoc, setNewLoc] = useState();  
+  const [curPosition, setCurPosition] = useState();
 
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
   const addSearchBar = (id) => {
@@ -30,9 +31,9 @@ const Path = (props) => {
   };
 
   const [coords, setCoords] = useState(INITIAL_COORDS);
-  const addCoords = (coord) => {
+  const addCoords = (coord, id) => {
     const data = {
-      id: "TODO",
+      id,
       loc: coord
     };
     setCoords([...coords, data]);
@@ -64,9 +65,15 @@ const Path = (props) => {
         const searchBar = allSearchBars[i];
         if (searchBar.hasChildNodes()) {
           if (searchBar.firstChild.id == "placeholder") {
-            console.log("GOOOOOOOOOOOOOOOD");
             searchBar.removeChild(searchBar.firstChild);
             searchBar.appendChild(newGeocoder.onAdd(map.map));
+            searchBar.setAttribute("id", i);
+            console.log("updated searchbar: ", searchBar);
+
+            // update most recently used searchbar so that a location can be tied to it
+            searchBar.addEventListener("change", (e) => {
+              setCurPosition(e.currentTarget.id);
+            });
           }
         }
       }
@@ -91,15 +98,14 @@ const Path = (props) => {
       
       return searchBar;
     });
-  }
-
+  };
 
   // if a new location has been added from any geocoder (triggered when newLoc is updated) 
   // add new location to stop list
   useEffect(() => {
     if (!newLoc)
       return;
-    addCoords(newLoc);
+    addCoords(newLoc, curPosition);
     setNewLoc(undefined);
   }, [newLoc]);
 
@@ -109,16 +115,16 @@ const Path = (props) => {
 
   useEffect(() => {
     updateGeocoders();
-  }, [searchBars]);
+  });
 
   // return empty if the map hasn't initialized, need the map to create geocoders in the search bar
+  // bug: not sure why this is true when the search bar re collapses
   if (!map) {
-    console.log("Map initializing...");
     return <div></div>;
   }
 
   // init path to have 2 stops to begin
-  // bug: only the second search bar would appear when they were called in the same conditional
+  // bug: only the second search bar renders when they are added at the same time
   if (searchBars.length == 0) {
     addSearchBar(1);
   }
