@@ -18,6 +18,12 @@ code {
   width: 100%;
 }
 
+.suggestions {
+  border-width: 3px;
+  border-color: black;
+  z-index: 999999;
+}
+
 .sidebar {
   position: absolute;
   left: -20vw;
@@ -25,7 +31,7 @@ code {
   width: 20vw;
   transition: left 0.1s ease-in-out;
   background-color: #fff;
-  box-shadow: 1px 0px 6px rgb(75, 75, 75);
+  box-shadow: 1px 0px 6px rgb(100, 100, 100);
   z-index: 10;
 }
 
