@@ -1,9 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
-import MaterialReactTable from 'material-react-table';
-import parse from 'html-react-parser';
-import parseHTML from 'jquery';
-
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import PlaceIcon from '@mui/icons-material/Place';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import AirlineStopsOutlinedIcon from '@mui/icons-material/AirlineStopsOutlined';
+import RouteOutlinedIcon from '@mui/icons-material/RouteOutlined';
+import NavigationOutlinedIcon from '@mui/icons-material/NavigationOutlined';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import AddIcon from '@mui/icons-material/Add';
+import Divider from '@mui/material/Divider';
 
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
@@ -53,7 +63,7 @@ const Path = (props) => {
   };
 
   const updateGeocoders = () => {
-    const allSearchBars = document.getElementsByClassName("geocoder_td");
+    const allSearchBars = document.getElementsByClassName("geocoder_div");
       for (let i  = 0; i < allSearchBars.length; i++) {
         const newGeocoder = new MapboxGeocoder({
           accessToken: map.mapboxgl.accessToken,
@@ -68,7 +78,7 @@ const Path = (props) => {
             searchBar.removeChild(searchBar.firstChild);
             searchBar.appendChild(newGeocoder.onAdd(map.map));
             searchBar.setAttribute("id", i);
-            console.log("updated searchbar: ", searchBar);
+            console.log("update searchbar: ", searchBar);
 
             // update most recently used searchbar so that a location can be tied to it
             searchBar.addEventListener("change", (e) => {
@@ -80,24 +90,38 @@ const Path = (props) => {
   };
 
   const renderStops = () => {
-    const geocoderPlaceholder = new MapboxGeocoder({
-      accessToken: map.mapboxgl.accessToken,
-      getItemValue: addLoc,
-      marker: false,
-      mapboxgl: map.mapboxgl,
-    });
-
-    return searchBars.map(s => {
-      const searchBar = <tr key={s.id} >
-        <td className="geocoder_td" >
-          <div className="mapboxgl-ctrl-geocoder mapboxgl-ctrl" id="placeholder">
-            {parse(geocoderPlaceholder.onAdd(map.map).outerHTML)}
+    const fullList = searchBars.map(s => {
+      const searchBar = <ListItem disablePadding key={s.id} >
+        <ListItemButton>
+          <div className="geocoder_div" >
+            <div id="placeholder"></div>
           </div>
-        </td>
-      </tr>;
+          <ListItemIcon>
+            <PlaceIcon sx={{ m: 1 }} />
+          </ListItemIcon>
+        </ListItemButton>
+      </ListItem>;
       
       return searchBar;
     });
+
+    const addButton = <ListItem disablePadding key="form" >
+      <ListItemButton onClick={() => addSearchBar(0)} >
+        <Button 
+          variant="raised"
+          endIcon={<AddIcon/>} 
+          sx={{ color: "gray", backgroundColor: "transparent",  "&:hover": {backgroundColor: "transparent"} }}
+          size="small"
+          disableRipple
+        >
+          Add Destination
+        </Button>
+      </ListItemButton>
+    </ListItem>;
+
+    fullList.push(addButton);
+
+    return fullList;
   };
 
   // if a new location has been added from any geocoder (triggered when newLoc is updated) 
@@ -133,14 +157,16 @@ const Path = (props) => {
   } 
 
   return (
-    <div style={{ margin: '5px' }}>
+    <div style={{ textAlign: "center", margin: "5px" }}>
       <h3>Navigation</h3>
-      <table>
-        <tbody>
-            {renderStops()}
-        </tbody>
-      </table>
-      <button onClick={() => addSearchBar(0)}>Add Destination</button>
+      <List >
+        {renderStops()}
+      </List>
+      <Divider>
+        <NavigationOutlinedIcon sx={{ color: "black" }}/>
+      </Divider>
+      <Button sx={{ mt: 2 }} variant="contained" size="large">Find Route</Button>
+      
     </div>
   );
 };

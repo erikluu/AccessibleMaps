@@ -3,6 +3,8 @@ import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import axios from "axios";
 
+const createQuery = require('../modules/createQuery');
+
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
 // default lat/long is set to SLO
