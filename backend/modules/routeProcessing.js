@@ -100,15 +100,10 @@ async function getRoute(query) {
 
     routeObject[0] = await callHERE(url);
     routeObject[0]["steepSegments"] = getSteepSegments(routeObject[0], maxGrade, units);
-    let unaccountedSteepSegments = routeObject[0]["steepSegments"];
-    while (unaccountedSteepSegments.length > 0) {
-        routeNumber++;
-        
-        url = queryProcessing.formatAvoidance(url, unaccountedSteepSegments);
-        routeObject[routeNumber] = await callHERE(url);
-
-        unaccountedSteepSegments = getSteepSegments(routeObject[routeNumber], maxGrade, units);
-        routeObject[routeNumber]["steepSegments"].push(unaccountedSteepSegments);
+    while (routeObject[routeNumber]["steepSegments"].length > 0) {
+        url = queryProcessing.formatAvoidance(url, routeObject[routeNumber]["steepSegments"]);
+        routeObject[++routeNumber] = await callHERE(url);
+        routeObject[routeNumber]["steepSegments"] = getSteepSegments(routeObject[routeNumber], maxGrade, units);
     }
     
     return routeObject;
