@@ -196,7 +196,7 @@ function MapView() {
       }
   
       // send waypoints to server api/route
-      await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}`)
+      await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&maxGrade=10`)
         .then(response => {
           console.log(response.data);
         }

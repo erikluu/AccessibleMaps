@@ -6,13 +6,13 @@ const https = require('https');
 const polyline = require('./polyline');
 const queryProcessing = require('./queryProcessing');
 
-function decodePolylines(data) {
-    data.routes.forEach((route) => {
+function decodePolylines(routes) {
+    routes.forEach((route) => {
         route.sections.forEach((section) => {
             section.polyline = polyline.decode(section.polyline);
         });
     });
-    return data;
+    return routes;
 }
 
 /* 
@@ -42,9 +42,9 @@ function getDistance(firstPoint, secondPoint) {
 
 function calculateGrade(firstPoint, secondPoint, units) {
     let elevationChange = Math.abs(firstPoint[2] - secondPoint[2]); // meters if "metric", feet if "imperial"
-    if (units === 'imperial') {
-        elevationChange *= 3.28084; // convert meters to feet
-    }
+    // if (units === 'imperial') {
+    //     elevationChange /= 3.28084; // convert meters to feet
+    // }
     const distance = getDistance(secondPoint, firstPoint);
     return Math.ceil(elevationChange / distance * 100); // round up to nearest integer
 }
@@ -56,7 +56,10 @@ function getSteepSegments(routes, maxGrade, units) {
             for (i = 1; i < section.polyline.polyline.length; i++) {
                 grade = calculateGrade(section.polyline.polyline[i-1], section.polyline.polyline[i], units);
                 if (grade >= maxGrade) {
-                    steepSegments.push(section.polyline[i]);
+                    const topLeft = `${section.polyline.polyline[i-1][0]},${section.polyline.polyline[i-1][1]}`;
+                    const bottomRight = `${section.polyline.polyline[i][0]},${section.polyline.polyline[i][1]}`;
+                    const steepSegment = {topLeft: topLeft, bottomRight: bottomRight, grade: grade};
+                    steepSegments.push(steepSegment);
                 }
             }
         });
@@ -76,8 +79,8 @@ function callHERE(url) {
 
             response.on('end', () => {
                 const result = JSON.parse(data);
-                const decoded = decodePolylines(result);
-                resolve(decoded);
+                const routes = decodePolylines(result.routes);
+                resolve(routes);
             });
 
         }).on('error', (err) => {
@@ -88,18 +91,24 @@ function callHERE(url) {
 }
 
 async function getRoute(query) {
-    let units = query.units;
+    let routeNumber = 0;
+    let routeObject = {};
 
+    let units = query['units'];
+    let maxGrade = query['maxGrade'];
     let url = queryProcessing.formatInitialURL(query);
-    let routeObject = await callHERE(url);
 
-    let steepSegments = getSteepSegments(routeObject.routes, 10, units);
-    let unaccountedSteepSegments = steepSegments;
+    routeObject[0] = await callHERE(url);
+    routeObject[0]["steepSegments"] = getSteepSegments(routeObject[0], maxGrade, units);
+    let unaccountedSteepSegments = routeObject[0]["steepSegments"];
     while (unaccountedSteepSegments.length > 0) {
+        routeNumber++;
+        
         url = queryProcessing.formatAvoidance(url, unaccountedSteepSegments);
-        routeObject = await callHERE(newURL);
-        unaccountedSteepSegments = getSteepSegments(routeObject, 10, units);
-        steepSegments.push(unaccountedSteepSegments);
+        routeObject[routeNumber] = await callHERE(url);
+
+        unaccountedSteepSegments = getSteepSegments(routeObject[routeNumber], maxGrade, units);
+        routeObject[routeNumber]["steepSegments"].push(unaccountedSteepSegments);
     }
     
     return routeObject;

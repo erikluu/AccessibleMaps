@@ -53,11 +53,13 @@ function formatRest(defaultQuery, query) {
 // /*
 //     Format the avoidance bboxes into a URL string
 //     avoid[areas]=bbox1|bbox2|bbox3|...
+//     bbox=lng,lat,lng,lat
+//     bbox=bottomRight,topLeft
 // */
 function formatAvoidance(url, bboxes) {
-    let avoidanceQuery = url.includes('avoid[areas]') ? '|' : '&avoid[areas]=';
+    let avoidanceQuery = url.includes('avoid[areas]=') ? '|' : '&avoid[areas]=';
     for (let i = 0; i < bboxes.length; i++) {
-        avoidanceQuery += `${bboxes[i].lng},${bboxes[i].lat},${bboxes[i].lng},${bboxes[i].lat}`;
+        avoidanceQuery += `bbox:${bboxes[i].bottomRight},${bboxes[i].topLeft}`;
         if (i !== bboxes.length - 1) {
             avoidanceQuery += '|';
         }
@@ -72,12 +74,13 @@ function formatAvoidance(url, bboxes) {
 function formatInitialURL(query) {
     const defaultQuery = {
         alternatives: 0,
-        maxGrade: 10,
         return: "elevation,polyline,summary",
         // spans: "segmentRef", // got rid of segmentRef, which is not supported by the free tier and sometimes messes up the JSON response causing a crash
         transportMode: "pedestrian",
         units: "imperial"
     };
+
+    delete query['maxGrade'];
 
     const waypoints = formatWaypoints(query);
     const rest = formatRest(defaultQuery, query);
