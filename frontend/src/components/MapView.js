@@ -181,14 +181,15 @@ function MapView() {
 
     // get route from /api/route
     const getRoute = async () => {
-      // const wp0 = [35.290401, -120.669763];
-      // const wp1 = [35.2813, -120.6608];
-      // const wp2 = [35.282592, -120.66529];
+      // one steep segment
+      const wp0 = [35.290401, -120.669763];
+      const wp1 = [35.2813, -120.6608];
+      const unit = "imperial";
 
       // steep for sure
-      const wp0 = [47.763172, -122.318642];
-      const wp1 = [47.762321, -122.316131];
-      const unit = "imperial";
+      // const wp0 = [47.763172, -122.318642];
+      // const wp1 = [47.762321, -122.316131];
+      // const unit = "imperial";
   
       // [lat, lng] -> "lat,lng"
       const waypoint = (wp) => {
