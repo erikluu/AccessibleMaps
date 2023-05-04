@@ -18,11 +18,17 @@ const MapView = (props) => {
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
+  const [pathRendered, setPathRender] = useState(false);
+
 
   const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
   const [routes, setRoutes] = useState(null); // list of route objects 
 
   const currentPath = props.stops;
+  if (currentPath.length >= 2 && !pathRendered) {
+    const qeury = createQuery.createQuery(currentPath);
+    setPathRender(true);
+  }
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;

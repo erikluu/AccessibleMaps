@@ -1,10 +1,10 @@
 
-const createQuery = () => {
-
+const createQuery = (path) => {
+    console.log('given', path);
 };
 
 
 
-export default {
+module.exports = {
     createQuery
 };
