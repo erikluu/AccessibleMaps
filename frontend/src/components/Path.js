@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 //import "../mapbox.css"
 
+import axios from "axios";
+
+
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -17,6 +20,8 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import AddIcon from '@mui/icons-material/Add';
 import Divider from '@mui/material/Divider';
+
+const createQuery = require('../modules/createQuery');
 
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
@@ -69,6 +74,18 @@ const Path = (props) => {
     .addTo(map.map);
 
     return item.place_name;
+  };
+
+  const getRoute = async () => {
+    const query = createQuery.createQuery(coords);
+
+    if (query) {
+      console.log("got", query);
+
+      const resp = await axios.get(query);
+      console.log(resp);
+    }
+    
   };
 
   const updateGeocoders = () => {
@@ -195,7 +212,14 @@ const Path = (props) => {
       <Divider>
         <NavigationOutlinedIcon sx={{ color: "black" }}/>
       </Divider>
-      <Button sx={{ mt: 2 }} variant="contained" size="large">Find Route</Button>
+      <Button 
+        sx={{ mt: 2 }} 
+        variant="contained" 
+        size="large"
+        onClick={() => getRoute()}
+      >
+        Find Route
+      </Button>
       
     </div>
   );

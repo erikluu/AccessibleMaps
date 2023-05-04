@@ -25,10 +25,10 @@ const MapView = (props) => {
   const [routes, setRoutes] = useState(null); // list of route objects 
 
   const currentPath = props.stops;
-  if (currentPath.length >= 2 && !pathRendered) {
-    const qeury = createQuery.createQuery(currentPath);
-    setPathRender(true);
-  }
+  // if (currentPath.length >= 2 && !pathRendered) {
+  //   const query = createQuery.createQuery(currentPath);
+  //   setPathRender(true);
+  // }
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
