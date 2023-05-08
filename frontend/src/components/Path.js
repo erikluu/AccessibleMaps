@@ -83,7 +83,11 @@ const Path = (props) => {
       console.log("got", query);
 
       const resp = await axios.get(query);
-      console.log(resp);
+      console.log(resp.data[0][0].sections);
+      const x = resp.data[0][0].sections[0].polyline.polyline;
+      console.log(x);
+
+      updateStops(x);
     }
     
   };
@@ -173,9 +177,9 @@ const Path = (props) => {
     setNewLoc(undefined);
   }, [newLoc]);
 
-  useEffect(() => {
-    updateStops(coords)
-  }, [coords]);
+  // useEffect(() => {
+  //   updateStops(coords)
+  // }, [coords]);
 
   useEffect(() => {
     updateGeocoders();

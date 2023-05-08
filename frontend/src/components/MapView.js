@@ -20,15 +20,53 @@ const MapView = (props) => {
   const [zoom, setZoom] = useState(defZoom);
   const [pathRendered, setPathRender] = useState(false);
 
+  const [x, sex] = useState(undefined);
 
   const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
   const [routes, setRoutes] = useState(null); // list of route objects 
 
   const currentPath = props.stops;
-  // if (currentPath.length >= 2 && !pathRendered) {
-  //   const query = createQuery.createQuery(currentPath);
+
+  if (currentPath && !pathRendered) {
+    console.log("path", currentPath);
+
+    const x = currentPath.map(pp => {
+      return [pp[0], pp[1]];
+    });
+
+    sex(x);
+    setPathRender(true);
+  }
+
+  // useEffect(() => {
+  //   const x = currentPath.map(pp => {
+  //     return [pp[0], pp[1]];
+  //   });
+
+  //   map.current.addLayer({
+  //     'id': 'route1',
+  //     'type': 'line',
+  //     'source': {
+  //       'type': 'geojson',
+  //       'data': {
+  //         'type': 'Feature',
+  //         'geometry': {
+  //           'type': 'LineString',
+  //           'coordinates': x
+  //         }
+  //       }
+  //     },
+  //     'layout': {
+  //       'line-join': 'round',
+  //       'line-cap': 'round'
+  //     },
+  //     'paint': {
+  //       'line-color': '#3386c0',
+  //       'line-width': 8
+  //     }
+  //   });
   //   setPathRender(true);
-  // }
+  // }, [x]);
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
