@@ -18,11 +18,9 @@ code {
   width: 100%;
 }
 
-.suggestions {
-  border-width: 3px;
-  border-color: black;
-  z-index: 999999;
-}
+/* .suggestions {
+  z-index: 0 !important;
+} */
 
 .sidebar {
   position: absolute;
@@ -41,7 +39,7 @@ code {
   right: -25px;
   height: 6%;
   width: 25px;
-  z-index: 1;
+  /*z-index: 0;*/
   cursor: pointer;
   font-size: x-large;
   border-top-right-radius: 5px;

@@ -1,18 +1,42 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
-import MaterialReactTable from 'material-react-table';
-import parse from 'html-react-parser';
-import parseHTML from 'jquery';
+//import "../mapbox.css"
 
+import axios from "axios";
+
+
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import CancelIcon from '@mui/icons-material/Cancel';
+import ListItemText from '@mui/material/ListItemText';
+import PlaceIcon from '@mui/icons-material/Place';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import AirlineStopsOutlinedIcon from '@mui/icons-material/AirlineStopsOutlined';
+import RouteOutlinedIcon from '@mui/icons-material/RouteOutlined';
+import NavigationOutlinedIcon from '@mui/icons-material/NavigationOutlined';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import AddIcon from '@mui/icons-material/Add';
+import Divider from '@mui/material/Divider';
+
+const createQuery = require('../modules/createQuery');
 
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
+const INITIAL_REMOVERS = [];
 
 const Path = (props) => {
   const {map, updateStops} = props;
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setCurPosition] = useState();
+  const [canRemove, setCanRemove] = useState(INITIAL_REMOVERS);
+  const updateCanRemove = (id, val) => {
+    canRemove[id] = val;
+    //console.log(canRemove);
+  };
 
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
   const addSearchBar = (id) => {
@@ -52,52 +76,96 @@ const Path = (props) => {
     return item.place_name;
   };
 
-  const updateGeocoders = () => {
-    const allSearchBars = document.getElementsByClassName("geocoder_td");
-      for (let i  = 0; i < allSearchBars.length; i++) {
-        const newGeocoder = new MapboxGeocoder({
-          accessToken: map.mapboxgl.accessToken,
-          getItemValue: addLoc,
-          marker: false,
-          mapboxgl: map.mapboxgl,
-        });
+  const getRoute = async () => {
+    const query = createQuery.createQuery(coords);
 
-        const searchBar = allSearchBars[i];
-        if (searchBar.hasChildNodes()) {
-          if (searchBar.firstChild.id == "placeholder") {
-            searchBar.removeChild(searchBar.firstChild);
-            searchBar.appendChild(newGeocoder.onAdd(map.map));
-            searchBar.setAttribute("id", i);
-            console.log("updated searchbar: ", searchBar);
+    if (query) {
+      console.log("got", query);
 
-            // update most recently used searchbar so that a location can be tied to it
-            searchBar.addEventListener("change", (e) => {
-              setCurPosition(e.currentTarget.id);
-            });
-          }
-        }
-      }
+      const resp = await axios.get(query);
+      console.log(resp.data[0][0].sections);
+      const x = resp.data[0][0].sections[0].polyline.polyline;
+      console.log(x);
+
+      updateStops(x);
+    }
+    
   };
 
-  const renderStops = () => {
-    const geocoderPlaceholder = new MapboxGeocoder({
-      accessToken: map.mapboxgl.accessToken,
-      getItemValue: addLoc,
-      marker: false,
-      mapboxgl: map.mapboxgl,
-    });
+  const updateGeocoders = () => {
+    const allSearchBars = document.getElementsByClassName("geocoder_div");
+    for (let i  = 0; i < allSearchBars.length; i++) {
+      const newGeocoder = new MapboxGeocoder({
+        accessToken: map.mapboxgl.accessToken,
+        getItemValue: addLoc,
+        marker: false,
+        mapboxgl: map.mapboxgl,
+      });
 
-    return searchBars.map(s => {
-      const searchBar = <tr key={s.id} >
-        <td className="geocoder_td" >
-          <div className="mapboxgl-ctrl-geocoder mapboxgl-ctrl" id="placeholder">
-            {parse(geocoderPlaceholder.onAdd(map.map).outerHTML)}
+      const searchBar = allSearchBars[i];
+      if (searchBar.hasChildNodes()) {
+        if (searchBar.firstChild.id == "placeholder") {
+          searchBar.removeChild(searchBar.firstChild);
+          searchBar.appendChild(newGeocoder.onAdd(map.map));
+          searchBar.setAttribute("id", i);
+          searchBar.style.zIndex = 1000 - i;
+          console.log("update searchbar: ", searchBar);
+
+          // update most recently used searchbar so that a location can be tied to it
+          searchBar.addEventListener("change", (e) => {
+            setCurPosition(e.currentTarget.id);
+          });
+        }
+      }
+
+    }
+  };
+
+  const test = (i) => {
+    if (canRemove[i]) {
+      return <CancelIcon sx={{ m: 1 }} />;    
+    }
+    else {
+      return <PlaceIcon sx={{ m: 1 }} />;
+    }
+  }
+
+  const renderStops = () => {
+    const fullList = searchBars.map(s => {
+      const searchBar = <ListItem disablePadding key={s.id} >
+        <ListItemButton>
+          <div className="geocoder_div" >
+            <div id="placeholder"></div>
           </div>
-        </td>
-      </tr>;
+          <ListItemIcon
+            onMouseEnter={() => updateCanRemove(s.id, true)}
+            onMouseLeave={() => updateCanRemove(s.id, false)}
+          >
+            {test(s.id)}
+          </ListItemIcon>
+        </ListItemButton>
+      </ListItem>;
       
       return searchBar;
     });
+
+    const addButton = <ListItem disablePadding key="form" >
+      <ListItemButton onClick={() => addSearchBar(0)} >
+        <Button 
+          variant="raised"
+          endIcon={<AddIcon/>} 
+          sx={{ color: "gray", backgroundColor: "transparent",  "&:hover": {backgroundColor: "transparent"} }}
+          size="small"
+          disableRipple
+        >
+          Add Destination
+        </Button>
+      </ListItemButton>
+    </ListItem>;
+
+    fullList.push(addButton);
+
+    return fullList;
   };
 
   // if a new location has been added from any geocoder (triggered when newLoc is updated) 
@@ -109,13 +177,20 @@ const Path = (props) => {
     setNewLoc(undefined);
   }, [newLoc]);
 
-  useEffect(() => {
-    updateStops(coords)
-  }, [coords]);
+  // useEffect(() => {
+  //   updateStops(coords)
+  // }, [coords]);
 
   useEffect(() => {
     updateGeocoders();
   });
+
+  useEffect(() => {
+    let arr = [];
+    for (let i = 0; i < searchBars.length - 1; i++)
+      arr.push(false);
+    setCanRemove(arr);
+  }, [searchBars]);
 
   // return empty if the map hasn't initialized, need the map to create geocoders in the search bar
   // bug: not sure why this is true when the search bar re collapses
@@ -133,14 +208,23 @@ const Path = (props) => {
   } 
 
   return (
-    <div style={{ margin: '5px' }}>
+    <div style={{ textAlign: "center", margin: "5px" }}>
       <h3>Navigation</h3>
-      <table>
-        <tbody>
-            {renderStops()}
-        </tbody>
-      </table>
-      <button onClick={() => addSearchBar(0)}>Add Destination</button>
+      <List >
+        {renderStops()}
+      </List>
+      <Divider>
+        <NavigationOutlinedIcon sx={{ color: "black" }}/>
+      </Divider>
+      <Button 
+        sx={{ mt: 2 }} 
+        variant="contained" 
+        size="large"
+        onClick={() => getRoute()}
+      >
+        Find Route
+      </Button>
+      
     </div>
   );
 };
