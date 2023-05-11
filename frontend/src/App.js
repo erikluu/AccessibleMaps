@@ -2,7 +2,7 @@ import "./App.css";
 import React, { useState, useEffect } from "react";
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import axios from 'axios';
-import SideBar from "./components/SideBar";
+import Sidebar from "./components/Sidebar";
 import MapView from "./components/MapView";
 
 <link
@@ -11,11 +11,6 @@ import MapView from "./components/MapView";
 />;
 
 const App = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const handleViewSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   const [map, setMap] = useState();
   const updateMap = (map) => {
     setMap(map);
@@ -27,8 +22,8 @@ const App = () => {
   };
  
   return (
-    <div className="top-level">
-      <SideBar isOpen={sidebarOpen} toggleSidebar={handleViewSidebar} map={map} updateStops={updateStops} stops={stops} />
+    <div className="top-level" >
+      <Sidebar map={map} updateStops={updateStops} stops={stops} />
       <MapView updateMap={updateMap} stops={stops} />
     </div>
   );
