@@ -73,7 +73,7 @@ function formatAvoidance(url, bboxes) {
 */
 function formatInitialURL(query) {
     const defaultQuery = {
-        alternatives: 0,
+        alternatives: 1,
         return: "elevation,polyline,summary",
         // spans: "segmentRef", // got rid of segmentRef, which is not supported by the free tier and sometimes messes up the JSON response causing a crash
         transportMode: "pedestrian",
