@@ -182,22 +182,23 @@ function MapView() {
     // get route from /api/route
     const getRoute = async () => {
       // one steep segment
-      const wp0 = [35.290401, -120.669763];
-      const wp1 = [35.2813, -120.6608];
-      const unit = "imperial";
-
-      // steep for sure
-      // const wp0 = [47.763172, -122.318642];
-      // const wp1 = [47.762321, -122.316131];
+      // const wp0 = [35.290401, -120.669763];
+      // const wp1 = [35.2813, -120.6608];
       // const unit = "imperial";
+
+      // // steep for sure
+      // // const wp0 = [47.763172, -122.318642];
+      // // const wp1 = [47.762321, -122.316131];
+      // // const unit = "imperial";
   
-      // [lat, lng] -> "lat,lng"
-      const waypoint = (wp) => {
-        return `${wp[0]},${wp[1]}`;
-      }
+      // // [lat, lng] -> "lat,lng"
+      // const waypoint = (wp) => {
+      //   return `${wp[0]},${wp[1]}`;
+      // }
   
       // send waypoints to server api/route
-      await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&maxGrade=10`)
+      // await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&maxGrade=10`)
+      await axios.get(`http://localhost:4000/api/route?units=metric&wp0=35.2827,-120.66511&wp1=35.3006,-120.663217&maxGrade=40`)
         .then(response => {
           console.log(response.data);
         }
