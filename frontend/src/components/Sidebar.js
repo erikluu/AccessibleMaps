@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 //import "../mapbox.css"
 
@@ -10,20 +10,16 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import CancelIcon from '@mui/icons-material/Cancel';
-import ListItemText from '@mui/material/ListItemText';
 import PlaceIcon from '@mui/icons-material/Place';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import AirlineStopsOutlinedIcon from '@mui/icons-material/AirlineStopsOutlined';
-import RouteOutlinedIcon from '@mui/icons-material/RouteOutlined';
 import NavigationOutlinedIcon from '@mui/icons-material/NavigationOutlined';
 import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
 import AddIcon from '@mui/icons-material/Add';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-
+import Stack from '@mui/material/Stack'
+import Slider from '@mui/material/Slider';
 
 
 
@@ -33,7 +29,9 @@ const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
 
-const Path = (props) => {
+const MAX_ADA_SLOPE = 8.33;
+
+const Sidebar = (props) => {
   const {map, updateStops} = props;
 
   const [sidebarState, setSidebarState] = useState(true);
@@ -50,7 +48,7 @@ const Path = (props) => {
   const addSearchBar = (id) => {
     let newID = id;
     let meta = 'init';
-    if (newID == 0) {
+    if (newID === 0) {
       newID = searchBars[searchBars.length - 1].id + 1;
       meta = 'additional';
     }
@@ -112,7 +110,7 @@ const Path = (props) => {
 
       const searchBar = allSearchBars[i];
       if (searchBar.hasChildNodes()) {
-        if (searchBar.firstChild.id == "placeholder") {
+        if (searchBar.firstChild.id === "placeholder") {
           searchBar.removeChild(searchBar.firstChild);
           searchBar.appendChild(newGeocoder.onAdd(map.map));
           searchBar.setAttribute("id", i);
@@ -208,10 +206,10 @@ const Path = (props) => {
 
   // init path to have 2 stops to begin
   // bug: only the second search bar renders when they are added at the same time
-  if (searchBars.length == 0) {
+  if (searchBars.length === 0) {
     addSearchBar(1);
   }
-  if (searchBars.length == 1) {
+  if (searchBars.length === 1) {
     addSearchBar(2);
   } 
 
@@ -219,17 +217,24 @@ const Path = (props) => {
     <Drawer 
       anchor="left"
       open={sidebarState}
-
+      variant="persistent"
     >
       <div className="navbar">
         <div className="navbar-header">
+        <Stack   
+          direction="row"
+          justifyContent="space-around"
+          alignItems="center"
+          spacing={3}
+        >
           <h3>Navigation</h3>
-          <Button 
-            variant="raised"
-            endIcon={<MenuIcon onClick={() => setSidebarState(!sidebarState)}/>} 
-            sx={{ color: "gray", backgroundColor: "transparent" }}
-            size="small"
-          ></Button>
+          <IconButton 
+            onClick={() => setSidebarState(!sidebarState)}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Stack>
+
         </div>
         <List className="navlist">
           {renderStops()}
@@ -245,9 +250,19 @@ const Path = (props) => {
         >
           Find Route
         </Button>
+        <br/><br/>
+        <Slider
+          marks
+          min={}
+          max={}
+          default={MAX_ADA_SLOPE}
+        
+        >
+
+        </Slider>
       </div>
     </Drawer>
   );
 };
 
-export default Path;
+export default Sidebar;

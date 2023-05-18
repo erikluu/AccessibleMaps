@@ -12,6 +12,24 @@ const defLNG = -120.6252;
 const defLAT = 35.2628;
 const defZoom = 9.00;
 
+
+const geojson1 = {
+  "type": "FeatureCollection",
+  "features": [{
+      "type": "Feature",
+      "geometry": {
+          "type": "LineString",
+          "coordinates": [
+                  [-122.48369693756104, 37.83381888486939],
+                  [-122.48348236083984, 37.83317489144141],
+                  [-122.48339653015138, 37.83270036637107],
+                  [-122.48356819152832, 37.832056363179625],
+                  [-122.48404026031496, 37.83114119107971]
+              ]
+      }
+  }]
+};
+
 const MapView = (props) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -20,61 +38,46 @@ const MapView = (props) => {
   const [zoom, setZoom] = useState(defZoom);
   const [pathRendered, setPathRender] = useState(false);
 
-  const [x, sex] = useState(undefined);
-
-  const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
-  const [routes, setRoutes] = useState(null); // list of route objects 
+  const [route, setRoute] = useState(null);
 
   const currentPath = props.stops;
 
-  if (currentPath && !pathRendered) {
-    console.log("path", currentPath);
 
-    const x = currentPath.map(pp => {
-      return [pp[0], pp[1]];
+  // current route render method
+  // TODO: make a better way of detecting when a new route is set
+  if (currentPath.length != 0 && !pathRendered) {
+    const points = currentPath.map(pp => [pp[1], pp[0]]);
+
+    const geoJson = {
+      "type": "FeatureCollection",
+      "features": [{
+          "type": "Feature",
+          "geometry": {
+              "type": "LineString",
+              "coordinates": points
+          }
+      }]
+    };
+
+    const bounds = new mapboxgl.LngLatBounds(points[0], points[0]);
+    for (const p of points) {
+      bounds.extend(p);
+    } 
+    map.current.fitBounds(bounds, {
+      padding: 20
     });
 
-    sex(x);
     setPathRender(true);
+    setRoute(geoJson);
+    map.current.getSource('data-update').setData(geoJson);
+    console.log('update tile source')
   }
-
-  // useEffect(() => {
-  //   const x = currentPath.map(pp => {
-  //     return [pp[0], pp[1]];
-  //   });
-
-  //   map.current.addLayer({
-  //     'id': 'route1',
-  //     'type': 'line',
-  //     'source': {
-  //       'type': 'geojson',
-  //       'data': {
-  //         'type': 'Feature',
-  //         'geometry': {
-  //           'type': 'LineString',
-  //           'coordinates': x
-  //         }
-  //       }
-  //     },
-  //     'layout': {
-  //       'line-join': 'round',
-  //       'line-cap': 'round'
-  //     },
-  //     'paint': {
-  //       'line-color': '#3386c0',
-  //       'line-width': 8
-  //     }
-  //   });
-  //   setPathRender(true);
-  // }, [x]);
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
-    const marker = new mapboxgl.Marker({
+    new mapboxgl.Marker({
       draggable: true,
-    })
-    .setLngLat(coords)
-    .addTo(map.current);
+    }).setLngLat(coords).addTo(map.current);
 
     return item.place_name;
   };
@@ -87,6 +90,26 @@ const MapView = (props) => {
       center: [lng, lat],
       zoom: zoom,
     });
+
+    map.current.on("load", () => {
+      map.current.addLayer({
+        "id": "data-update",
+        "type": "line",
+        "source": {
+            "type": "geojson",
+            "data": geojson1 // your previously defined variable
+        },
+        "layout": {
+            "line-join": "round",
+            "line-cap": "round"
+        },
+        "paint": {
+            "line-color": "#4285F4",
+            "line-width": 8
+        }
+    });
+    });
+
     // add search bar
     map.current.addControl(
       new MapboxGeocoder({
@@ -107,36 +130,11 @@ const MapView = (props) => {
       })
     );
 
-    map.current.on("load", () => {});
-
     props.updateMap({
       map: map.current,
       mapboxgl,
     });
   });
-
-  // // get route
-  // useEffect(() => {
-  //   if (!map.current) return; // wait for map to initialize
-  //   const getURL = (waypoints, routeDistanceUnit) => {
-  //     let url = `http://localhost:4000/api/route?unit=${routeDistanceUnit}`;
-  //     for (let i = 0; i < waypoints.length; i++) {
-  //       url += `&wp${i}=${waypoints[i]}`;
-  //     }
-  //     return url;
-  //   }
-    
-  //   axios.get(`${getURL(waypoints, routeDistanceUnit)}`)
-  //     .then(response => {
-  //       // setRoutePath(response);
-  //       // setRouteDistance(response.data.resourceSets[0].resources[0].travelDistance);
-  //       console.log(response);
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
-  // }, [waypoints, routeDistanceUnit]);
-
 
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
@@ -146,26 +144,6 @@ const MapView = (props) => {
       setZoom(map.current.getZoom().toFixed(2));
     });
   });
-
-  // get route from /api/route
-  const getRoute = async () => {
-    const wp0 = [35.290401, -120.669763];
-    const wp1 = [35.2813, -120.6608];
-    const wp2 = [35.282592, -120.66529];
-    const unit = "imperial";
-
-    // [lat, lng] -> "lat,lng"
-    const waypoint = (wp) => {
-      return `${wp[0]},${wp[1]}`;
-    }
-
-    // send waypoints to server api/route
-    await axios.get(`http://localhost:4000/api/route?units=${unit}&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&wp2=${waypoint(wp2)}`)
-      .then(response => {
-        console.log(response.data);
-      }
-    );
-  }
 
   return (
     <div>
