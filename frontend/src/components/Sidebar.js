@@ -4,6 +4,15 @@ import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 
 import axios from "axios";
 
+import {
+  LineChart,
+  ResponsiveContainer,
+  Legend, Tooltip,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid
+} from 'recharts';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -28,13 +37,55 @@ const createQuery = require('../modules/createQuery');
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
+const INITIAL_HEIGHTS = [];
 
-const MAX_ADA_SLOPE = 8.33;
+const MAX_ADA_SLOPE = 8;
+
+const pdata = [
+  {
+      name: 'MongoDb',
+      student: 11,
+      fees: 120
+  },
+  {
+      name: 'Javascript',
+      student: 15,
+      fees: 12
+  },
+  {
+      name: 'PHP',
+      student: 5,
+      fees: 10
+  },
+  {
+      name: 'Java',
+      student: 10,
+      fees: 5
+  },
+  {
+      name: 'C#',
+      student: 9,
+      fees: 4
+  },
+  {
+      name: 'C++',
+      student: 10,
+      fees: 8
+  },
+];
 
 const Sidebar = (props) => {
   const {map, updateStops} = props;
 
   const [sidebarState, setSidebarState] = useState(true);
+  
+  const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
+  const handleSliderChange = (event, newValue) => {
+    setSlope(newValue);
+  };
+
+  const [displayGraph, setDisplayGraph] = useState(false);
+  const [heights, setHeights] = useState(INITIAL_HEIGHTS);
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setCurPosition] = useState();
@@ -83,17 +134,26 @@ const Sidebar = (props) => {
   };
 
   const getRoute = async () => {
-    const query = createQuery.createQuery(coords);
+    const query = createQuery.createQuery(coords, slope);
 
     if (query) {
       console.log("got", query);
 
       const resp = await axios.get(query);
-      console.log(resp.data[0][0].sections);
+      //console.log(resp.data[0][0].sections);
       const x = resp.data[0][0].sections[0].polyline.polyline;
-      console.log(x);
-
+      //console.log(x);
+      let elevations = [];
+      for (let i = 0; i < x.length; i++) {
+        elevations.push({
+          distance: i,
+          elevation: x[i][2]
+        });
+      }
+      setHeights(elevations);
+      setDisplayGraph(true);
       updateStops(x);
+      
     }
     
   };
@@ -251,15 +311,34 @@ const Sidebar = (props) => {
           Find Route
         </Button>
         <br/><br/>
-        <Slider
-          marks
-          min={}
-          max={}
-          default={MAX_ADA_SLOPE}
-        
-        >
-
-        </Slider>
+        <h4>Maximum Slope</h4>
+        <div style={{ margin: "20px" }} >
+          <Slider
+            min={0}
+            max={15}
+            default={MAX_ADA_SLOPE}
+            valueLabelDisplay="auto"
+            value={slope}
+            onChange={handleSliderChange}    
+          />
+        </div>
+        <ResponsiveContainer width="100%" aspect={3} style={{overflow: "hidden"}}>
+          <LineChart data={heights}>
+            <CartesianGrid />
+              <XAxis 
+                dataKey="distance" 
+                interval={'preserveStartEnd'} 
+              />
+              <YAxis></YAxis>
+              <Legend />
+              <Tooltip />
+              <Line 
+                dataKey="elevation"
+                stroke="black" activeDot={{ r: 1 }}
+              />
+              
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </Drawer>
   );
