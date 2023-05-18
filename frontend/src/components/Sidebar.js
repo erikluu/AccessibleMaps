@@ -1,34 +1,91 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 //import "../mapbox.css"
 
 import axios from "axios";
 
+import {
+  LineChart,
+  ResponsiveContainer,
+  Legend, Tooltip,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid
+} from 'recharts';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import CancelIcon from '@mui/icons-material/Cancel';
-import ListItemText from '@mui/material/ListItemText';
 import PlaceIcon from '@mui/icons-material/Place';
-import HighlightOffIcon from '@mui/icons-material/HighlightOff';
-import AirlineStopsOutlinedIcon from '@mui/icons-material/AirlineStopsOutlined';
-import RouteOutlinedIcon from '@mui/icons-material/RouteOutlined';
 import NavigationOutlinedIcon from '@mui/icons-material/NavigationOutlined';
 import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
 import AddIcon from '@mui/icons-material/Add';
 import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import Stack from '@mui/material/Stack'
+import Slider from '@mui/material/Slider';
+
+
 
 const createQuery = require('../modules/createQuery');
 
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
+const INITIAL_HEIGHTS = [];
 
-const Path = (props) => {
+const MAX_ADA_SLOPE = 8;
+
+const pdata = [
+  {
+      name: 'MongoDb',
+      student: 11,
+      fees: 120
+  },
+  {
+      name: 'Javascript',
+      student: 15,
+      fees: 12
+  },
+  {
+      name: 'PHP',
+      student: 5,
+      fees: 10
+  },
+  {
+      name: 'Java',
+      student: 10,
+      fees: 5
+  },
+  {
+      name: 'C#',
+      student: 9,
+      fees: 4
+  },
+  {
+      name: 'C++',
+      student: 10,
+      fees: 8
+  },
+];
+
+const Sidebar = (props) => {
   const {map, updateStops} = props;
+
+  const [sidebarState, setSidebarState] = useState(true);
+  
+  const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
+  const handleSliderChange = (event, newValue) => {
+    setSlope(newValue);
+  };
+
+  const [displayGraph, setDisplayGraph] = useState(false);
+  const [heights, setHeights] = useState(INITIAL_HEIGHTS);
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setCurPosition] = useState();
@@ -42,7 +99,7 @@ const Path = (props) => {
   const addSearchBar = (id) => {
     let newID = id;
     let meta = 'init';
-    if (newID == 0) {
+    if (newID === 0) {
       newID = searchBars[searchBars.length - 1].id + 1;
       meta = 'additional';
     }
@@ -77,17 +134,26 @@ const Path = (props) => {
   };
 
   const getRoute = async () => {
-    const query = createQuery.createQuery(coords);
+    const query = createQuery.createQuery(coords, slope);
 
     if (query) {
       console.log("got", query);
 
       const resp = await axios.get(query);
-      console.log(resp.data[0][0].sections);
+      //console.log(resp.data[0][0].sections);
       const x = resp.data[0][0].sections[0].polyline.polyline;
-      console.log(x);
-
+      //console.log(x);
+      let elevations = [];
+      for (let i = 0; i < x.length; i++) {
+        elevations.push({
+          distance: i,
+          elevation: x[i][2]
+        });
+      }
+      setHeights(elevations);
+      setDisplayGraph(true);
       updateStops(x);
+      
     }
     
   };
@@ -104,7 +170,7 @@ const Path = (props) => {
 
       const searchBar = allSearchBars[i];
       if (searchBar.hasChildNodes()) {
-        if (searchBar.firstChild.id == "placeholder") {
+        if (searchBar.firstChild.id === "placeholder") {
           searchBar.removeChild(searchBar.firstChild);
           searchBar.appendChild(newGeocoder.onAdd(map.map));
           searchBar.setAttribute("id", i);
@@ -200,33 +266,82 @@ const Path = (props) => {
 
   // init path to have 2 stops to begin
   // bug: only the second search bar renders when they are added at the same time
-  if (searchBars.length == 0) {
+  if (searchBars.length === 0) {
     addSearchBar(1);
   }
-  if (searchBars.length == 1) {
+  if (searchBars.length === 1) {
     addSearchBar(2);
   } 
 
   return (
-    <div style={{ textAlign: "center", margin: "5px" }}>
-      <h3>Navigation</h3>
-      <List >
-        {renderStops()}
-      </List>
-      <Divider>
-        <NavigationOutlinedIcon sx={{ color: "black" }}/>
-      </Divider>
-      <Button 
-        sx={{ mt: 2 }} 
-        variant="contained" 
-        size="large"
-        onClick={() => getRoute()}
-      >
-        Find Route
-      </Button>
-      
-    </div>
+    <Drawer 
+      anchor="left"
+      open={sidebarState}
+      variant="persistent"
+    >
+      <div className="navbar">
+        <div className="navbar-header">
+        <Stack   
+          direction="row"
+          justifyContent="space-around"
+          alignItems="center"
+          spacing={3}
+        >
+          <h3>Navigation</h3>
+          <IconButton 
+            onClick={() => setSidebarState(!sidebarState)}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Stack>
+
+        </div>
+        <List className="navlist">
+          {renderStops()}
+        </List>
+        <Divider>
+          <NavigationOutlinedIcon sx={{ color: "black" }}/>
+        </Divider>
+        <Button 
+          sx={{ mt: 2 }} 
+          variant="contained" 
+          size="large"
+          onClick={() => getRoute()}
+        >
+          Find Route
+        </Button>
+        <br/><br/>
+        <h4>Maximum Slope</h4>
+        <div style={{ margin: "20px" }} >
+          <Slider
+            min={0}
+            max={15}
+            default={MAX_ADA_SLOPE}
+            valueLabelDisplay="auto"
+            value={slope}
+            onChange={handleSliderChange}    
+          />
+        </div>
+        <ResponsiveContainer width="100%" aspect={3} style={{overflow: "hidden"}}>
+          <LineChart data={heights}>
+            <CartesianGrid />
+              <XAxis 
+                dataKey="distance" 
+                interval={'preserveStartEnd'} 
+              />
+              <YAxis></YAxis>
+              <Legend />
+              <Tooltip />
+              <Line 
+                dataKey="elevation"
+                stroke="black" activeDot={{ r: 1 }}
+              />
+              
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </Drawer>
   );
 };
 
-export default Path;
+export default Sidebar;

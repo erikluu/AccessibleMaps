@@ -1,5 +1,5 @@
 
-const createQuery = (path) => {
+const createQuery = (path, slope) => {
     console.log('given', path);
     if (path.length != 2) return;
 
