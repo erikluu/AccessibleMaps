@@ -57,7 +57,7 @@ function getElevationFromPNG(pngData, width, height, lat, lon) {
 }
 
 // https://tile.nextzen.org/tilezen/terrain/v1/geotiff/12/675/1618.tif?api_key=lhZDrnOvSr2kPW4GVk5tXQ
-// https://tile.nextzen.org/tilezen/terrain/v1/256/terrarium/12/675/1618.png?api_key=lhZDrnOvSr2kPW4GVk5tXQ
+// https://tile.nextzen.org/tilezen/terrain/v1/256/normal/12/675/1618.png?api_key=lhZDrnOvSr2kPW4GVk5tXQ THIS ONE!!!!!!!!!!
 // https://tile.thunderforest.com/outdoors/14/2700/7429.png?apikey=37b43bbc7fff4ebe933c6f20b6c1e915
 async function requestElevationData(zoom, x, y) {
     const endpoint = `https://tile.thunderforest.com/outdoors/${zoom}/${x}/${y}.png?apikey=${process.env.THUNDERFOREST_API_KEY}`;
