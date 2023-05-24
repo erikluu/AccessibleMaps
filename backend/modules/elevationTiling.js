@@ -38,33 +38,67 @@ function calculateGrade(firstPoint, secondPoint, units) {
     return Math.ceil(elevationChange / distance * 100); // round up to nearest integer
 }
 
+function interpolatePointsAlongPolyline(start, end, interval) {
+    const dist = getDistance(start, end);
+    const numPoints = Math.ceil(dist / interval); // get a point every 4 meters
+
+    const points = [];
+    for (let i = 0; i < numPoints; i++) {
+        const fraction = i / numPoints;
+        const lat = start[0] + fraction * (end[0] - start[0]);
+        const lng = start[1] + fraction * (end[1] - start[1]);
+        points.push([lat, lng]);
+    }
+    return points;
+}
+
+function getElevationFromPNG(pngData, width, height, lat, lon) {
+
+}
+
+// https://tile.nextzen.org/tilezen/terrain/v1/geotiff/12/675/1618.tif?api_key=lhZDrnOvSr2kPW4GVk5tXQ
+// https://tile.nextzen.org/tilezen/terrain/v1/256/terrarium/12/675/1618.png?api_key=lhZDrnOvSr2kPW4GVk5tXQ
+// https://tile.thunderforest.com/outdoors/14/2700/7429.png?apikey=37b43bbc7fff4ebe933c6f20b6c1e915
+async function requestElevationData(zoom, x, y) {
+    const endpoint = `https://tile.thunderforest.com/outdoors/${zoom}/${x}/${y}.png?apikey=${process.env.THUNDERFOREST_API_KEY}`;
+    await axios.get(endpoint)
+        .then((response) => {
+            return response.data;
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+}
+
+function convertToTileCoordinates(latitude, longitude, zoom) {
+    Math.radians = function(degrees) {
+        return degrees * Math.PI / 180;
+    }
+    const tileX = parseInt((longitude + 180.0) / 360.0 * (1 << zoom));
+    const tileY = parseInt((1 - Math.log(Math.tan(Math.radians(latitude)) + (1 / Math.cos(Math.radians(latitude)))) / Math.PI) / 2 * (2 ** zoom))
+    return [tileX, tileY];
+} 
+
 function getElevations(polyline) {
-    const endpoint = `https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/${start[1]},${start[0]};${end[1]},${end[0]}?layers=contour&limit=${numPoints}&access_token=${mapboxAccessToken}`;
+    const zoom = 12;
 
     for (let i = 0; i < polyline.length - 1; i++) {
         const start = polyline[i];
         const end = polyline[i + 1];
+        const pointsAlongPolyline = interpolatePointsAlongPolyline(start, end, 4);
 
-        const d = getDistance(start, end);
-        const numPoints = Math.ceil(d / 4); // get a point every 100 meters
+        for (let j = 0; j < pointsAlongPolyline.length; j++) {
+            const point = pointsAlongPolyline[j];
+            const [tileX, tileY] = convertToTileCoordinates(point[0], point[1], zoom);
+            const tileData = requestElevationData(zoom, tileX, tileY);
+            const elevation = parseElevationData(tileData, point);
 
 
-
-        axios.get
-        const grade = calculateGrade(start, end, 'metric');
-        if (grade > 10) {
-            console.log(grade);
         }
-    }
 
-    
-    axios.get(endpoint)
-        .then((response) => {
-            elevationData.push(response.data.features.map(feature => feature.properties.ele));
-    }).catch((error) => {
-        console.error(error);
-    });
+    }
 }
+
 
 function getSteepSegments(routes, maxGrade, units) {
     routes.forEach((route) => {
