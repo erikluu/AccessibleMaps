@@ -37,7 +37,7 @@ code {
 .coordinates {
   background: rgba(0, 0, 0, 0.5);
   color: #fff;
-  position: absolute;
+  position: relative;
   bottom: 40px;
   left: 10px;
   padding: 5px 10px;
@@ -46,6 +46,30 @@ code {
   line-height: 18px;
   border-radius: 3px;
   display: none;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 47%;
+  height: 6%;
+  width: 25px;
+  z-index: 1;
+  cursor: pointer;
+  font-size: x-large;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  border-width: 1px;
+  border-color: rgb(131, 131, 131);
+}
+
+.boxdraw {
+  background: rgba(56, 135, 190, 0.1);
+  border: 2px solid #3887be;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
 }
 
 /* .marker {
