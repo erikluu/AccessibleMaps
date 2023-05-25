@@ -41,7 +41,7 @@ const MapView = (props) => {
   const [route, setRoute] = useState(null);
 
   const currentPath = props.stops;
-
+  const {setSidebarState} = props;
 
   // current route render method
   // TODO: make a better way of detecting when a new route is set
@@ -147,6 +147,9 @@ const MapView = (props) => {
 
   return (
     <div>
+      <button onClick={() => setSidebarState(true)} className="sidebar-toggle">
+        &#8250;
+      </button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );

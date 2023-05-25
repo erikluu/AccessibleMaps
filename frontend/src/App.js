@@ -20,11 +20,13 @@ const App = () => {
   const updateStops = (stops) => {
     setStops(stops);
   };
+
+  const [sidebarState, setSidebarState] = useState(true);
  
   return (
     <div className="top-level" >
-      <Sidebar map={map} updateStops={updateStops} stops={stops} />
-      <MapView updateMap={updateMap} stops={stops} />
+      <Sidebar map={map} updateStops={updateStops} stops={stops} sidebarState={sidebarState} setSidebarState={setSidebarState} />
+      <MapView updateMap={updateMap} stops={stops} setSidebarState={setSidebarState} />
     </div>
   );
 };

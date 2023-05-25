@@ -1,18 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
-//import "../mapbox.css"
+import ElevationChart from './ElevationChart';
 
 import axios from "axios";
-
-import {
-  LineChart,
-  ResponsiveContainer,
-  Legend, Tooltip,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid
-} from 'recharts';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -29,7 +19,8 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Stack from '@mui/material/Stack'
 import Slider from '@mui/material/Slider';
-
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import Typography from '@mui/material/Typography';
 
 
 const createQuery = require('../modules/createQuery');
@@ -41,44 +32,9 @@ const INITIAL_HEIGHTS = [];
 
 const MAX_ADA_SLOPE = 8;
 
-const pdata = [
-  {
-      name: 'MongoDb',
-      student: 11,
-      fees: 120
-  },
-  {
-      name: 'Javascript',
-      student: 15,
-      fees: 12
-  },
-  {
-      name: 'PHP',
-      student: 5,
-      fees: 10
-  },
-  {
-      name: 'Java',
-      student: 10,
-      fees: 5
-  },
-  {
-      name: 'C#',
-      student: 9,
-      fees: 4
-  },
-  {
-      name: 'C++',
-      student: 10,
-      fees: 8
-  },
-];
-
 const Sidebar = (props) => {
-  const {map, updateStops} = props;
+  const {map, updateStops, sidebarState, setSidebarState} = props;
 
-  const [sidebarState, setSidebarState] = useState(true);
-  
   const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
   const handleSliderChange = (event, newValue) => {
     setSlope(newValue);
@@ -281,20 +237,22 @@ const Sidebar = (props) => {
     >
       <div className="navbar">
         <div className="navbar-header">
-        <Stack   
-          direction="row"
-          justifyContent="space-around"
-          alignItems="center"
-          spacing={3}
-        >
-          <h3>Navigation</h3>
-          <IconButton 
-            onClick={() => setSidebarState(!sidebarState)}
+          <Stack   
+            direction="row"
+            justifyContent="space-around"
+            alignItems="center"
+            spacing={6}
           >
-            <MenuIcon />
-          </IconButton>
-        </Stack>
-
+            <Typography variant="h4">
+              Navigation
+            </Typography>
+            <IconButton 
+              onClick={() => setSidebarState(false)}
+            >
+              <NavigateBeforeIcon />
+            </IconButton>
+          </Stack>
+          <Divider/>
         </div>
         <List className="navlist">
           {renderStops()}
@@ -322,23 +280,7 @@ const Sidebar = (props) => {
             onChange={handleSliderChange}    
           />
         </div>
-        <ResponsiveContainer width="100%" aspect={3} style={{overflow: "hidden"}}>
-          <LineChart data={heights}>
-            <CartesianGrid />
-              <XAxis 
-                dataKey="distance" 
-                interval={'preserveStartEnd'} 
-              />
-              <YAxis></YAxis>
-              <Legend />
-              <Tooltip />
-              <Line 
-                dataKey="elevation"
-                stroke="black" activeDot={{ r: 1 }}
-              />
-              
-          </LineChart>
-        </ResponsiveContainer>
+        
       </div>
     </Drawer>
   );
