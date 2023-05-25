@@ -33,16 +33,87 @@ const geojson1 = {
 const MapView = (props) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const canvas = useRef(null);
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
 
   const currentPath = props.stops;
-  const {setSidebarState} = props;
+  const {setSidebarState, bboxAllowed} = props;
 
-  // current route render method
-  // TODO: make a better way of detecting when a new route is set
+  let start, box, current;
 
+  const mousePos = (e) => {
+    const rect = canvas.current.getBoundingClientRect();
+  
+    return new mapboxgl.Point(
+      e.clientX - rect.left - canvas.current.clientLeft,
+      e.clientY - rect.top - canvas.current.clientTop
+    );
+  };
+
+  const mouseDown = (e) => {
+    // Continue the rest of the function if bbox is allowed
+    if (!(e.shiftKey && e.button === 0)) return;
+     
+    // Disable default drag zooming when the shift key is held down.
+    map.current.dragPan.disable();
+     
+    // Call functions for the following events
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+     
+    // Capture the first xy coordinates
+    start = mousePos(e);
+    console.log(start);
+  };
+
+  const onMouseMove = (e) => {
+    // Capture the ongoing xy coordinates
+    current = mousePos(e);
+     
+    // Append the box element if it doesnt exist
+    if (!box) {
+      box = document.createElement('div');
+      box.classList.add('boxdraw');
+      canvas.current.appendChild(box);
+    }
+     
+    const minX = Math.min(start.x, current.x),
+      maxX = Math.max(start.x, current.x),
+      minY = Math.min(start.y, current.y),
+      maxY = Math.max(start.y, current.y);
+     
+    // Adjust width and xy position of the box element ongoing
+    const pos = `translate(${minX}px, ${minY}px)`;
+    box.style.transform = pos;
+    box.style.width = maxX - minX + 'px';
+    box.style.height = maxY - minY + 'px';
+  };
+     
+  const onMouseUp = (e) => {
+    // Capture xy coordinates
+    //finish([start, mousePos(e)]);
+    //console.log("second point", e.lngLat.wrap());
+    finish();
+  };
+     
+  const onKeyDown = (e) => {
+    // If the ESC key is pressed
+    if (e.keyCode === 27) finish();
+  };
+  
+  const finish = () => {
+    // Remove these events now that finish has been called.
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("mouseup", onMouseUp);
+
+    map.current.dragPan.enable();
+  };
+
+  // route render function
   const updatePath = () => {
     const points = currentPath.map(pp => [pp[1], pp[0]]);  
     const geoJson = {
@@ -66,9 +137,6 @@ const MapView = (props) => {
 
     map.current.getSource('data-update').setData(geoJson);
   };
-  
-
-
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
@@ -88,13 +156,18 @@ const MapView = (props) => {
       zoom: zoom,
     });
 
+    map.current.boxZoom.disable();
+    //map.current.doubleClickZoom.disable();
+    //map.current.scrollZoom.disable();
+
     map.current.on("load", () => {
+      // route layer
       map.current.addLayer({
         "id": "data-update",
         "type": "line",
         "source": {
             "type": "geojson",
-            "data": geojson1 // your previously defined variable
+            "data": geojson1 
         },
         "layout": {
             "line-join": "round",
@@ -104,7 +177,18 @@ const MapView = (props) => {
             "line-color": "#4285F4",
             "line-width": 8
         }
+      });
+
+      canvas.current = map.current.getCanvasContainer();
+      canvas.current.addEventListener("mousedown", mouseDown, true);
     });
+
+    map.current.on("mousedown", (e) => {
+      console.log("first point", e.lngLat.wrap());
+    });
+
+    map.current.on("mouseup", (e) => {
+      console.log("second point", e.lngLat.wrap());
     });
 
     // add search bar
@@ -140,13 +224,18 @@ const MapView = (props) => {
       setLat(map.current.getCenter().lat.toFixed(4));
       setZoom(map.current.getZoom().toFixed(2));
     });
+
+    return Document.getElementBy
   });
 
+
+
+
+  // redraw path every time coords are updated
   useEffect(() => {
     if (!currentPath) return;
     if (currentPath.length == 0) return;
-
-    console.log("trying to re render path with");
+    console.log("trying to re render path");
     updatePath();
   }, [currentPath]);
 

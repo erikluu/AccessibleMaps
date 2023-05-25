@@ -33,7 +33,7 @@ const INITIAL_HEIGHTS = [];
 const MAX_ADA_SLOPE = 8;
 
 const Sidebar = (props) => {
-  const {map, updateStops, sidebarState, setSidebarState} = props;
+  const {map, updateStops, sidebarState, setSidebarState, bboxAllowed, setBboxAllowed} = props;
 
   const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
   const handleSliderChange = (event, newValue) => {
@@ -275,6 +275,14 @@ const Sidebar = (props) => {
             onChange={handleSliderChange}    
           />
         </div>
+        <Button
+          sx={{ mt: 2 }} 
+          variant="contained" 
+          size="large"
+          onClick={() => setBboxAllowed(bboxAllowed)}
+        >
+          Avoid Mode
+        </Button>
         
       </div>
     </Drawer>

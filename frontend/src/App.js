@@ -22,12 +22,28 @@ const App = () => {
   };
 
   const [sidebarState, setSidebarState] = useState(true);
-  
+  const [bboxAllowed, setBboxAllowed] = useState(false);
+  const updateBbox = (prev) => {
+    setBboxAllowed(!prev);
+  };
  
   return (
     <div className="top-level" >
-      <Sidebar map={map} updateStops={updateStops} stops={stops} sidebarState={sidebarState} setSidebarState={setSidebarState} />
-      <MapView updateMap={updateMap} stops={stops} setSidebarState={setSidebarState} />
+      <Sidebar 
+        map={map} 
+        updateStops={updateStops} 
+        stops={stops} 
+        sidebarState={sidebarState} 
+        setSidebarState={setSidebarState} 
+        bboxAllowed={bboxAllowed} 
+        setBboxAllowed={updateBbox} 
+      />
+      <MapView 
+        updateMap={updateMap} 
+        stops={stops} 
+        setSidebarState={setSidebarState} 
+        bboxAllowed={bboxAllowed} 
+      />
     </div>
   );
 };
