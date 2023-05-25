@@ -36,18 +36,15 @@ const MapView = (props) => {
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
-  const [pathRendered, setPathRender] = useState(false);
-
-  const [route, setRoute] = useState(null);
 
   const currentPath = props.stops;
   const {setSidebarState} = props;
 
   // current route render method
   // TODO: make a better way of detecting when a new route is set
-  if (currentPath.length != 0 && !pathRendered) {
-    const points = currentPath.map(pp => [pp[1], pp[0]]);
 
+  const updatePath = () => {
+    const points = currentPath.map(pp => [pp[1], pp[0]]);  
     const geoJson = {
       "type": "FeatureCollection",
       "features": [{
@@ -58,7 +55,7 @@ const MapView = (props) => {
           }
       }]
     };
-
+  
     const bounds = new mapboxgl.LngLatBounds(points[0], points[0]);
     for (const p of points) {
       bounds.extend(p);
@@ -67,11 +64,11 @@ const MapView = (props) => {
       padding: 20
     });
 
-    setPathRender(true);
-    setRoute(geoJson);
     map.current.getSource('data-update').setData(geoJson);
-    console.log('update tile source')
-  }
+  };
+  
+
+
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
@@ -144,6 +141,14 @@ const MapView = (props) => {
       setZoom(map.current.getZoom().toFixed(2));
     });
   });
+
+  useEffect(() => {
+    if (!currentPath) return;
+    if (currentPath.length == 0) return;
+
+    console.log("trying to re render path with");
+    updatePath();
+  }, [currentPath]);
 
   return (
     <div>

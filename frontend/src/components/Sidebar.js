@@ -40,7 +40,6 @@ const Sidebar = (props) => {
     setSlope(newValue);
   };
 
-  const [displayGraph, setDisplayGraph] = useState(false);
   const [heights, setHeights] = useState(INITIAL_HEIGHTS);
 
   const [newLoc, setNewLoc] = useState();  
@@ -89,6 +88,8 @@ const Sidebar = (props) => {
     return item.place_name;
   };
 
+
+  // navigation function - calls backend and returns list of points
   const getRoute = async () => {
     const query = createQuery.createQuery(coords, slope);
 
@@ -97,19 +98,17 @@ const Sidebar = (props) => {
 
       const resp = await axios.get(query);
       //console.log(resp.data[0][0].sections);
-      const x = resp.data[0][0].sections[0].polyline.polyline;
-      //console.log(x);
+      const points = resp.data[0][0].sections[0].polyline.polyline;
+      //console.log(points);
       let elevations = [];
-      for (let i = 0; i < x.length; i++) {
+      for (let i = 0; i < points.length; i++) {
         elevations.push({
           distance: i,
-          elevation: x[i][2]
+          elevation: points[i][2]
         });
       }
       setHeights(elevations);
-      setDisplayGraph(true);
-      updateStops(x);
-      
+      updateStops(points);      
     }
     
   };
@@ -198,10 +197,6 @@ const Sidebar = (props) => {
     addCoords(newLoc, curPosition);
     setNewLoc(undefined);
   }, [newLoc]);
-
-  // useEffect(() => {
-  //   updateStops(coords)
-  // }, [coords]);
 
   useEffect(() => {
     updateGeocoders();
