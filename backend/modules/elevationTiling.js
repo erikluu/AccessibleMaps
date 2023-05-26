@@ -2,7 +2,12 @@
     This module is responsible for filtering the route by grade of road
 */
 
+const SphericalMercator = require('@mapbox/sphericalmercator');
 const axios = require('axios');
+const mercator = new SphericalMercator({
+    size: 256,
+    antimeridian: true
+  });
 
 /* 
 * Haversine Formula for calculating distance between two points
@@ -52,25 +57,7 @@ function interpolatePointsAlongPolyline(start, end, interval) {
     return points;
 }
 
-function getElevationFromPNG(pngData, width, height, lat, lon) {
-
-}
-
-// https://tile.nextzen.org/tilezen/terrain/v1/geotiff/12/675/1618.tif?api_key=lhZDrnOvSr2kPW4GVk5tXQ
-// https://tile.nextzen.org/tilezen/terrain/v1/256/normal/12/675/1618.png?api_key=lhZDrnOvSr2kPW4GVk5tXQ THIS ONE!!!!!!!!!!
-// https://tile.thunderforest.com/outdoors/14/2700/7429.png?apikey=37b43bbc7fff4ebe933c6f20b6c1e915
-async function requestElevationData(zoom, x, y) {
-    const endpoint = `https://tile.thunderforest.com/outdoors/${zoom}/${x}/${y}.png?apikey=${process.env.THUNDERFOREST_API_KEY}`;
-    await axios.get(endpoint)
-        .then((response) => {
-            return response.data;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-}
-
-function convertToTileCoordinates(latitude, longitude, zoom) {
+function coordinateToTile(latitude, longitude, zoom) {
     Math.radians = function(degrees) {
         return degrees * Math.PI / 180;
     }
@@ -79,33 +66,74 @@ function convertToTileCoordinates(latitude, longitude, zoom) {
     return [tileX, tileY];
 } 
 
-function getElevations(polyline) {
-    const zoom = 12;
+const lonLatToWorldPixelCoords = ([lon, lat], worldSize) => {
+    const mercatorX = worldSize * (lon / 360 + 0.5);
+    const mercatorY =
+      (worldSize *
+        (1 - Math.log(Math.tan(Math.PI * (0.25 + lat / 360))) / Math.PI)) /
+      2;
+  
+    return [Math.round(mercatorX), Math.round(mercatorY)];
+};
+
+
+// function coordinateToPixel(latitude, longitude, zoom) {
+//     const tileSize = 256; // size of each tile in pixels
+//     const initialResolution = 2 * Math.PI * 6378137 / tileSize; // initial resolution at zoom level 0
+//     const originShift = 2 * Math.PI * 6378137 / 2.0; // shift from latitude/longitude origin to pixel coordinate origin at zoom level 0
+//     const resolution = initialResolution / Math.pow(2, zoom); // resolution at the given zoom level
+    
+//     const [tileX, tileY] = coordinateToTile(latitude, longitude, zoom);
+//     const x = (longitude + 180) / 360 * tileSize * Math.pow(2, zoom);
+//     const y = ((1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2) * tileSize * Math.pow(2, zoom);
+  
+//     const pixelX = Math.round(x / resolution - originShift);
+//     const pixelY = Math.round(y / resolution - originShift);
+  
+//     return [x, y];
+// }
+
+function requestElevationData(zoom, points) {
+
+    const elevations = points.map(async (point) => {
+        mercatorCoord = mercator.forward([point[1], point[0]]);
+        const [tileX, tileY] = coordinateToTile(point[0], point[1], zoom);
+        const endpoint = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${x}/${y}.pngraw?access_token=${process.env.MAPBOXGL_ACCESS_TOKEN}}`;
+        const tile = await axios.get(endpoint);
+        const [x, y] = coordinateToPixel(point[0], point[1], zoom);
+        const elevation = tile.data[(y * 256 + x) * 4];
+        return point.push(elevation)
+    });
+
+    console.log(elevations);
+    return elevations;
+  }
+
+async function getElevations(polyline) {
+    const zoom = 15;
+    let allTiles = [];
+    let points = [];
 
     for (let i = 0; i < polyline.length - 1; i++) {
         const start = polyline[i];
         const end = polyline[i + 1];
         const pointsAlongPolyline = interpolatePointsAlongPolyline(start, end, 4);
-
-        for (let j = 0; j < pointsAlongPolyline.length; j++) {
-            const point = pointsAlongPolyline[j];
-            const [tileX, tileY] = convertToTileCoordinates(point[0], point[1], zoom);
-            const tileData = requestElevationData(zoom, tileX, tileY);
-            const elevation = parseElevationData(tileData, point);
-
-
-        }
-
+        points = points.concat(pointsAlongPolyline);
     }
-}
 
+    allTiles = await Promise.all(requestElevationData(zoom, points));
+    console.log(allTiles);
+    return allTiles;
+}
 
 function getSteepSegments(routes, maxGrade, units) {
     routes.forEach((route) => {
+        let steepSegments = [];
         route.sections.forEach((section) => {
-            getElevations(section.polyline.polyline);
+            steepSegments.concat(getElevations(section.polyline.polyline));
         });
-    });    
+        route.steepSegments = steepSegments;
+    });
 
     return routes;
 }
