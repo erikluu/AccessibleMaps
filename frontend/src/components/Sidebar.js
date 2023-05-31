@@ -21,7 +21,9 @@ import Stack from '@mui/material/Stack'
 import Slider from '@mui/material/Slider';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import Typography from '@mui/material/Typography';
-
+import SettingsIcon from '@mui/icons-material/Settings';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import HelpIcon from '@mui/icons-material/Help';
 
 const createQuery = require('../modules/createQuery');
 
@@ -88,6 +90,14 @@ const Sidebar = (props) => {
     return item.place_name;
   };
 
+  const toggleOptions = () => {
+    const div = document.getElementById("options");
+    if (div.style.display === "none") {
+      div.style.display = "block";
+    } else {
+      div.style.display = "none";
+    }
+  }
 
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
@@ -247,43 +257,57 @@ const Sidebar = (props) => {
               <NavigateBeforeIcon />
             </IconButton>
           </Stack>
+          <br className="header-br"></br>
           <Divider/>
         </div>
-        <List className="navlist">
-          {renderStops()}
-        </List>
-        <Divider>
-          <NavigationOutlinedIcon sx={{ color: "black" }}/>
-        </Divider>
-        <Button 
-          sx={{ mt: 2 }} 
-          variant="contained" 
-          size="large"
-          onClick={() => getRoute()}
-        >
-          Find Route
-        </Button>
-        <br/><br/>
-        <h4>Maximum Slope</h4>
-        <div style={{ margin: "20px" }} >
-          <Slider
-            min={0}
-            max={15}
-            default={MAX_ADA_SLOPE}
-            valueLabelDisplay="auto"
-            value={slope}
-            onChange={handleSliderChange}    
-          />
+        <div className="navbar-body">
+          <List className="navlist">
+            {renderStops()}
+          </List>
+          <Divider>
+            <NavigationOutlinedIcon sx={{ color: "black" }}/>
+          </Divider>
+          <Button 
+            sx={{ mt: 2 }} 
+            variant="contained" 
+            size="large"
+            onClick={() => getRoute()}
+          >
+            Find Route
+          </Button>
+          <div className="options" id="options" style={{ display: "none"}} >
+            bruh
+          </div>
         </div>
-        <Button
-          sx={{ mt: 2 }} 
-          variant="contained" 
-          size="large"
-          onClick={() => setBboxAllowed(bboxAllowed)}
-        >
-          Avoid Mode
-        </Button>
-        
+
+        <div className="nav-bottom">
+          <Divider/>
+          <br className="footer-br"></br>
+          <Stack   
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            spacing={5}
+          >
+            <Button 
+              variant="raised"
+              endIcon={<SettingsIcon/>} 
+              sx={{ color: "gray" }}
+              size="large"
+              onClick={() => toggleOptions()}
+            >
+              More Options
+            </Button>
+            <Button 
+              variant="raised"
+              endIcon={<HelpIcon/>} 
+              sx={{ color: "gray" }}
+              size="large"
+            >
+              Help
+            </Button>
+          </Stack>
+        </div>
       </div>
     </Drawer>
   );
