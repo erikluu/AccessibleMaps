@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import ElevationChart from './ElevationChart';
+import AdvancedOptions from './AdvancedOptions';
 
 import axios from "axios";
 
@@ -18,7 +19,6 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Stack from '@mui/material/Stack'
-import Slider from '@mui/material/Slider';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import Typography from '@mui/material/Typography';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -32,15 +32,8 @@ const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
 const INITIAL_HEIGHTS = [];
 
-const MAX_ADA_SLOPE = 8;
-
 const Sidebar = (props) => {
   const {map, updateStops, sidebarState, setSidebarState, bboxAllowed, setBboxAllowed} = props;
-
-  const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
-  const handleSliderChange = (event, newValue) => {
-    setSlope(newValue);
-  };
 
   const [heights, setHeights] = useState(INITIAL_HEIGHTS);
 
@@ -90,17 +83,24 @@ const Sidebar = (props) => {
     return item.place_name;
   };
 
+  const [optionsDisplay, setOptionsDisplay] = useState("block");
   const toggleOptions = () => {
     const div = document.getElementById("options");
-    if (div.style.display === "none") {
+    if (optionsDisplay == "none") {
+      setOptionsDisplay("block");
       div.style.display = "block";
-    } else {
+    }
+    else {
+      setOptionsDisplay("none");
       div.style.display = "none";
     }
   }
 
+
+
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
+    let slope = 40;
     const query = createQuery.createQuery(coords, slope);
 
     if (query) {
@@ -275,8 +275,8 @@ const Sidebar = (props) => {
           >
             Find Route
           </Button>
-          <div className="options" id="options" style={{ display: "none"}} >
-            bruh
+          <div className="options" id="options" >
+            <AdvancedOptions />
           </div>
         </div>
 
