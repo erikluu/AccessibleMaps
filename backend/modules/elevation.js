@@ -1,4 +1,5 @@
 const { get } = require("https");
+const PNG = require('pngjs').PNG;
 const SphericalMercator = require('@mapbox/sphericalmercator');
 
 const mercator = new SphericalMercator({
@@ -20,6 +21,7 @@ function hashCode(str) {
     }
     return hash;
 }
+
 /* 
 * Haversine Formula for calculating distance between two points
 * https://en.wikipedia.org/wiki/Haversine_formula
@@ -101,25 +103,29 @@ function coordinateToTile(latitude, longitude, zoom) {
 } 
 
 function requestElevationTile(tileX, tileY, zoom) {
-    const endpoint = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${tileX}/${tileY}.pngraw?access_token=${process.env.MAPBOXGL_API_KEY}}`;
-    console.log(endpoint);
-    return new Promise((resolve, reject) => {
-        get(endpoint, (response) => {
-            let data;
-            
-            response.on('data', (chunk) => {
-                data = chunk;
-            });
+    try {
+        const endpoint = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${tileX}/${tileY}.pngraw?access_token=${process.env.MAPBOXGL_API_KEY}`;
+        return new Promise((resolve, reject) => {
+            get(endpoint, (response) => {
+                let data;
+                
+                response.on('data', (chunk) => {
+                    data = chunk;
+                });
 
-            response.on('end', () => {
-                resolve(data);
-            });
+                response.on('end', () => {
+                    resolve(data);
+                });
 
-        }).on('error', (err) => {
-            console.log(err);
-            reject('Mapbox API error');
+            }).on('error', (err) => {
+                console.log(err);
+                reject('Mapbox API error');
+            });
         });
-    });
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
 }
 
 function getElevationTiles(routes, zoom) {
@@ -158,38 +164,48 @@ async function resolveObjectPromises(obj) {
     const entries = Object.entries(obj);
     for (const [key, promise] of entries) {
         const tile = await promise;
-        obj[key] = tile.toString();
+        obj[key] = tile;
     }
     return obj;
   }
 
-function getElevationFromTile(tile, tileX, tileY, coordinate, zoom) {
+function getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom) {
+    const png = PNG.sync.read(tileBuffer);
+    const pixels = png.data;
+
     const pixelX = mercator.px([coordinate[1], coordinate[0]], zoom)[0] - tileX * 256;
     const pixelY = mercator.px([coordinate[1], coordinate[0]], zoom)[1] - tileY * 256;
     const pixelIndex = (256 * pixelY + pixelX) * 4;
-    const r = tile[pixelIndex];
-    const g = tile[pixelIndex + 1];
-    const b = tile[pixelIndex + 2];
+    const r = pixels[pixelIndex];
+    const g = pixels[pixelIndex + 1];
+    const b = pixels[pixelIndex + 2];
     const elevation = -10000 + ((r * 256 * 256 + g * 256 + b) * 0.1);
     return elevation;
 }
 
-function getElevationValue(tile, coordinate, zoom) {
+function getElevationValue(tileBuffer, coordinate, zoom) {
     const [tileX, tileY] = coordinateToTile(coordinate[0], coordinate[1], zoom);
-    const elevation = getElevationFromTile(tile, tileX, tileY, coordinate, zoom);
+    const elevation = getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom);
     return elevation;
 }
+
+function getGrade(start, end) {
+    const distance = start[2];
+    const elevation = end[3] - start[3];
+    const grade = elevation / distance * 100;
+    return grade;
+}
                 
-async function getGrades(routes, maxGrade, units) {
+async function getGrades(routes) {
     const zoom = 18;
     routes = segmentPolylines(routes);
     routes = getDistanceBetweenAllPoints(routes);
     const [tilePromises, tileByCoordinate] = getElevationTiles(routes, zoom);
-    let tiles = []
+    let tileBuffers = []
 
     try {
         console.log('requesting tiles');
-        tiles = await resolveObjectPromises(tilePromises);
+        tileBuffers = await resolveObjectPromises(tilePromises);
         console.log('tiles received');
     } catch (error) {
         console.error(error);
@@ -203,7 +219,7 @@ async function getGrades(routes, maxGrade, units) {
             const coordinate = fullLine[i];
             const coordinateHash = hashCode(`${coordinate[0]},${coordinate[1]}`);
             const tileHash = tileByCoordinate[coordinateHash];
-            const tile = tiles[tileHash];
+            const tile = tileBuffers[tileHash];
             const elevation = getElevationValue(tile, coordinate, zoom);
             coordinate[3] = elevation;
         }
@@ -215,11 +231,8 @@ async function getGrades(routes, maxGrade, units) {
         for (let i = 0; i < fullLine.length - 1; i++) {
             const start = fullLine[i];
             const end = fullLine[i + 1];
-            const distance = start[2];
-            const elevation = start[3];
-            // const grade = getGrade(distance, elevation, start, end, units);
-            // start[4] = grade;
-            start[4] = "WOOOO"
+            const grade = getGrade(start, end);
+            start[4] = grade;
         }
     });
 
