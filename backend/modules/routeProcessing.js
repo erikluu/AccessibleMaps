@@ -47,7 +47,7 @@ async function getRoute(query) {
     let url = queryProcessing.formatInitialURL(query);
 
     routeObject[0] = await callHERE(url);
-    routeObject[0]["steepSegments"] = elevation.getElevations(routeObject[0], maxGrade, units);
+    routeObject[0]["steepSegments"] = await elevation.getGrades(routeObject[0], maxGrade, units);
     console.log(routeObject);
 
     
