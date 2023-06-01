@@ -24,6 +24,7 @@ import Typography from '@mui/material/Typography';
 import SettingsIcon from '@mui/icons-material/Settings';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import HelpIcon from '@mui/icons-material/Help';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const createQuery = require('../modules/createQuery');
 
@@ -96,6 +97,23 @@ const Sidebar = (props) => {
     }
   }
 
+  const getOptionsButtonText = () => {
+    if (optionsDisplay == "none") {
+      return "More Options";
+    }
+    else {
+      return "Back";
+    }
+  };
+
+  const getOptionsButtonIcon = () => {
+    if (optionsDisplay == "none") {
+      return <SettingsIcon/>;
+    }
+    else {
+      return <ArrowBackIcon/>;
+    }
+  };
 
 
   // navigation function - calls backend and returns list of points
@@ -291,12 +309,12 @@ const Sidebar = (props) => {
           >
             <Button 
               variant="raised"
-              endIcon={<SettingsIcon/>} 
+              endIcon={getOptionsButtonIcon()} 
               sx={{ color: "gray" }}
               size="large"
               onClick={() => toggleOptions()}
             >
-              More Options
+              {getOptionsButtonText()}
             </Button>
             <Button 
               variant="raised"

@@ -30,7 +30,7 @@ code {
   text-align: center;
   margin: 5px;
   width: 20vw; 
-  max-width: 20vw; 
+  max-width: 350px; 
   min-width: 307px;
   z-index: 2;
 }
@@ -40,7 +40,7 @@ code {
   bottom: 10px;
   text-align: center;
   width: 20vw; 
-  max-width: 20vw; 
+  max-width: 350px; 
   min-width: 307px;
 }
 
@@ -56,13 +56,21 @@ code {
   margin-top: 5px;
 }
 
+.menu-spacer {
+  display: block;
+  content: "";
+  margin-top: 5px;
+}
+
 .options {
   position: fixed;
   width: 20vw; 
-  max-width: 20vw; 
+  max-width: 350px; 
   min-width: 307px;  
   bottom: 60px;
-  height: 84vh;
+  top: 60px;
+  left: 5px;
+  right: 5px;
   background-color: #fff;
   z-index: 3;
   display: block;
@@ -71,7 +79,7 @@ code {
 .advanced-options {
   align-items: flex-start;
   text-align: left;
-  margin: 10px;
+  margin: 15px;
 
 }
 
