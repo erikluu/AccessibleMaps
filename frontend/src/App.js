@@ -45,7 +45,8 @@ const App = () => {
       <MapView 
         updateMap={updateMap} 
         stops={stops} 
-        setSidebarState={setSidebarState} 
+        setSidebarState={setSidebarState}
+        sidebarState={sidebarState}
         bboxAllowed={bboxAllowed}
         setBbox={setBbox}
       />

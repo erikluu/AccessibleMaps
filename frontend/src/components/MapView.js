@@ -12,6 +12,7 @@ const defLNG = -120.6252;
 const defLAT = 35.2628;
 const defZoom = 9.00;
 
+const SIDEBAR_WIDTH_PADDING = { left: 325 };
 const INITIAL_BBOX = [0, 0];
 
 const geojson1 = {};
@@ -26,7 +27,7 @@ const MapView = (props) => {
   const [zoom, setZoom] = useState(defZoom);
 
   const currentPath = props.stops;
-  const {setSidebarState, bboxAllowed, setBbox} = props;
+  const {sidebarState, setSidebarState, bboxAllowed, setBbox} = props;
 
   const [bboxPoints, setBboxPoints] = useState(null);
   const updateBboxPoints = (p) => {
@@ -182,6 +183,8 @@ const MapView = (props) => {
         }
       });
 
+
+      // tracks a point along the current route
       map.current.addLayer({
         'id': 'point',
         'source': {
@@ -230,6 +233,11 @@ const MapView = (props) => {
       })
     );
 
+    map.current.easeTo({
+      padding: SIDEBAR_WIDTH_PADDING,
+      duration: 0 // in MS
+    });
+
     props.updateMap({
       map: map.current,
       mapboxgl,
@@ -252,6 +260,23 @@ const MapView = (props) => {
     console.log("trying to re render path");
     updatePath();
   }, [currentPath]);
+
+  useEffect(() => {
+    console.log("slidddddddddddddeeee");
+
+    if (sidebarState) {
+      map.current.easeTo({
+        padding: SIDEBAR_WIDTH_PADDING,
+        duration: 1000
+      });
+    }
+    else {
+      map.current.easeTo({
+        padding: { left: 0 },
+        duration: 1000
+      });
+    }
+  }, [sidebarState]);
 
   return (
     <div>

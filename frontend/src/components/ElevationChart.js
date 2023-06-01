@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -53,14 +53,8 @@ const calcDistance = (lat1, lon1, lat2, lon2) => {
 const ElevationChart = (props) => {
   const {routeData, map} = props;
 
-  const updateCurPoint = (index) => {
-    console.log("getting point at", index);
-
-    
+  const updateCurPoint = (index) => {    
     const p = routeData[index];
-
-    console.log("getting point at", p);
-
     const geoJson = {
       'type': 'Point',
       'coordinates': [p[1], p[0]]
@@ -70,6 +64,10 @@ const ElevationChart = (props) => {
   };
 
   const [curPoint, setCurPoint] = useState(null);
+  const [cheese, setCheese] = useState(0);
+  const updateCheese = () => {
+    setCheese(cheese == 1 ? 0 : 1);
+  };
 
   const [chartData, setChartData] = useState({
     labels: [],
@@ -84,7 +82,7 @@ const ElevationChart = (props) => {
     }]
   });
 
-  const options = {
+  const options = useMemo(() => ({
     animation: false,
     maintainAspectRatio: false,
     interaction: { intersect: false, mode: 'index' },
@@ -110,7 +108,7 @@ const ElevationChart = (props) => {
         }
       }
     }
-  }
+  }), []);
 
   useEffect(() => {
     if (!routeData) return;
@@ -144,17 +142,20 @@ const ElevationChart = (props) => {
         spanGaps: true
       }]
     };
+
     setChartData(newData);
+    updateCheese();
   }, [routeData]);
 
   useEffect(() => {
     if (!curPoint) return;
     updateCurPoint(curPoint);
-
   }, [curPoint]);
 
   return (
-    <Line options={options} data={chartData} plugins={plugins} redraw={true}/>
+    <div className="inner-chart-container">
+      <Line options={options} data={chartData} plugins={plugins} key={cheese}/>
+    </div>
   );
 };
 
