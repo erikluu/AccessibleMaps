@@ -4,7 +4,7 @@
 */
 const https = require('https');
 const polyline = require('./polyline');
-const queryProcessing = require('./queryProcessing');
+const queryFormatting = require('./queryFormatting');
 const elevation = require('./elevation');
 
 function decodePolylines(routes) {
@@ -44,19 +44,11 @@ async function getRoute(query) {
 
     let units = query['units'];
     let maxGrade = query['maxGrade'];
-    let url = queryProcessing.formatInitialURL(query);
+    let url = queryFormatting.formatInitialURL(query);
 
     routeObject[0] = await callHERE(url);
     routeObject[0]["steepSegments"] = await elevation.getGrades(routeObject[0], maxGrade, units);
     console.log(routeObject);
-
-    
-    
-    // while (routeObject[routeNumber]["steepSegments"].length > 0) {
-    //     url = queryProcessing.formatAvoidance(url, routeObject[routeNumber]["steepSegments"]);
-    //     routeObject[++routeNumber] = await callHERE(url);
-    //     routeObject[routeNumber]["steepSegments"] = elevation.getElevations(routeObject[routeNumber], maxGrade, units);
-    // }
     
     return routeObject;
 }
