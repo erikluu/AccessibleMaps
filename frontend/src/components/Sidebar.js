@@ -84,16 +84,19 @@ const Sidebar = (props) => {
     return item.place_name;
   };
 
-  const [optionsDisplay, setOptionsDisplay] = useState("block");
+  const [optionsDisplay, setOptionsDisplay] = useState("none");
   const toggleOptions = () => {
-    const div = document.getElementById("options");
+    const div1 = document.getElementById("options");
+    const div2 = document.getElementById("stoplist");
     if (optionsDisplay == "none") {
       setOptionsDisplay("block");
-      div.style.display = "block";
+      div1.style.display = "block";
+      div2.style.visibility = "hidden";
     }
     else {
       setOptionsDisplay("none");
-      div.style.display = "none";
+      div1.style.display = "none";
+      div2.style.visibility = "visible";
     }
   }
 
@@ -279,14 +282,14 @@ const Sidebar = (props) => {
           <Divider/>
         </div>
         <div className="navbar-body">
-          <List className="navlist">
+          <List className="navlist" id="stoplist" >
             {renderStops()}
           </List>
           <Divider>
             <NavigationOutlinedIcon sx={{ color: "black" }}/>
           </Divider>
           <Button 
-            sx={{ mt: 2 }} 
+            sx={{ mt: 1 }} 
             variant="contained" 
             size="large"
             onClick={() => getRoute()}
@@ -296,8 +299,10 @@ const Sidebar = (props) => {
           <div className="options" id="options" >
             <AdvancedOptions />
           </div>
+          <div className="chart-wrapper">
+            <ElevationChart/>
+          </div>
         </div>
-
         <div className="nav-bottom">
           <Divider/>
           <br className="footer-br"></br>

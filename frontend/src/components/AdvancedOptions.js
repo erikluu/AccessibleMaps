@@ -9,14 +9,12 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 
-
-const MAX_ADA_SLOPE = 8;
-
+const DEFAULT_ADA_SLOPE = 8;
 
 const AdvancedOptions = (props) => {
   const {bboxAllowed, setBboxAllowed} = props;
 
-  const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
+  const [slope, setSlope] = useState(DEFAULT_ADA_SLOPE); 
   const handleSliderChange = (event, newValue) => {
     setSlope(newValue);
   };
@@ -24,7 +22,7 @@ const AdvancedOptions = (props) => {
   return (
     <div className="advanced-options">
       <Typography
-        variant="h5"
+        variant="h6"
       >
         Set Maximum grade
       </Typography>
@@ -43,10 +41,11 @@ const AdvancedOptions = (props) => {
         <Slider
           min={0}
           max={15}
-          default={MAX_ADA_SLOPE}
+          default={DEFAULT_ADA_SLOPE}
           valueLabelDisplay="auto"
           value={slope}
-          onChange={handleSliderChange}    
+          onChange={handleSliderChange}
+          sx={{color: "gray"}}
         />
         <Tooltip 
           placement="top"
@@ -61,9 +60,10 @@ const AdvancedOptions = (props) => {
       </Stack>
       <br className="menu-spacer"></br>
       <Divider/>
-      <br></br>
+      <br className="menu-spacer"></br>
+      <br className="menu-spacer"></br>
       <Typography
-        variant="h5"
+        variant="h6"
       >
         Select Roads to Avoid
       </Typography>
@@ -73,14 +73,29 @@ const AdvancedOptions = (props) => {
       >
         Select an area on the map to avoid. Click on the button below to define the bounds, using a box.
       </Typography>
-      <Button
-        sx={{ mt: 2 }} 
-        variant="contained" 
-        size="large"
-        onClick={() => setBboxAllowed(bboxAllowed)}
+      <Stack
+        direction="row"
+        justifyContent="space-around"
+        alignItems="flex-end"
+        spacing={2}
       >
-        Avoid Mode
-      </Button> 
+        <Button
+          sx={{ mt: 2, color: "gray", borderColor: "gray",  }} 
+          onClick={() => setBboxAllowed(bboxAllowed)}
+          variant="outlined"
+          size="large"
+        >
+          Add Bounds
+        </Button>
+        <Button
+          sx={{ mt: 2, color: "gray", borderColor: "gray" }} 
+          onClick={() => setBboxAllowed(bboxAllowed)}
+          variant="outlined"
+          size="large"
+        >
+          Reset
+        </Button>
+      </Stack>
     </div>
   );
 };
