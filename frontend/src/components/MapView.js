@@ -12,23 +12,10 @@ const defLNG = -120.6252;
 const defLAT = 35.2628;
 const defZoom = 9.00;
 
+const INITIAL_BBOX = [0, 0];
 
-const geojson1 = {
-  "type": "FeatureCollection",
-  "features": [{
-      "type": "Feature",
-      "geometry": {
-          "type": "LineString",
-          "coordinates": [
-                  [-122.48369693756104, 37.83381888486939],
-                  [-122.48348236083984, 37.83317489144141],
-                  [-122.48339653015138, 37.83270036637107],
-                  [-122.48356819152832, 37.832056363179625],
-                  [-122.48404026031496, 37.83114119107971]
-              ]
-      }
-  }]
-};
+const geojson1 = {};
+const geojson2 = {};
 
 const MapView = (props) => {
   const mapContainer = useRef(null);
@@ -39,7 +26,16 @@ const MapView = (props) => {
   const [zoom, setZoom] = useState(defZoom);
 
   const currentPath = props.stops;
-  const {setSidebarState, bboxAllowed} = props;
+  const {setSidebarState, bboxAllowed, setBbox} = props;
+
+  const [bboxPoints, setBboxPoints] = useState(null);
+  const updateBboxPoints = (p) => {
+    console.log("updating box");
+    setBboxPoints("nice");
+
+    console.log("is now", bboxPoints);
+
+  };
 
   let start, box, current;
 
@@ -58,28 +54,32 @@ const MapView = (props) => {
      
     // Disable default drag zooming when the shift key is held down.
     map.current.dragPan.disable();
+    map.current.boxZoom.disable();
+    map.current.doubleClickZoom.disable();
+    map.current.keyboard.disable();
+    map.current.scrollZoom.disable();
+    map.current.dragRotate.disable();
+    map.current.touchZoomRotate.disable();
      
     // Call functions for the following events
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('keydown', onKeyDown);
-     
+
+    // create box
+    box = document.createElement('div');
+    box.classList.add('boxdraw');
+    box.id = "bbox";
+    canvas.current.appendChild(box);
+   
     // Capture the first xy coordinates
     start = mousePos(e);
-    console.log(start);
   };
 
   const onMouseMove = (e) => {
     // Capture the ongoing xy coordinates
     current = mousePos(e);
-     
-    // Append the box element if it doesnt exist
-    if (!box) {
-      box = document.createElement('div');
-      box.classList.add('boxdraw');
-      canvas.current.appendChild(box);
-    }
-     
+          
     const minX = Math.min(start.x, current.x),
       maxX = Math.max(start.x, current.x),
       minY = Math.min(start.y, current.y),
@@ -110,7 +110,9 @@ const MapView = (props) => {
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("mouseup", onMouseUp);
 
-    map.current.dragPan.enable();
+    //map.current.dragPan.enable();
+
+    updateBboxPoints(69);
   };
 
   // route render function
@@ -127,6 +129,8 @@ const MapView = (props) => {
       }]
     };
   
+    map.current.getSource('data-update').setData(geoJson);
+
     const bounds = new mapboxgl.LngLatBounds(points[0], points[0]);
     for (const p of points) {
       bounds.extend(p);
@@ -135,7 +139,6 @@ const MapView = (props) => {
       padding: 20
     });
 
-    map.current.getSource('data-update').setData(geoJson);
   };
 
   const addLoc = (item) => {
@@ -179,16 +182,32 @@ const MapView = (props) => {
         }
       });
 
+      map.current.addLayer({
+        'id': 'point',
+        'source': {
+          type: "geojson",
+          data: geojson2
+        },
+        'type': 'circle',
+        'paint': {
+          'circle-radius': 10,
+          'circle-color': "#FF0000"
+        }
+      });
+
       canvas.current = map.current.getCanvasContainer();
       canvas.current.addEventListener("mousedown", mouseDown, true);
     });
 
     map.current.on("mousedown", (e) => {
-      console.log("first point", e.lngLat.wrap());
+      console.log('p1:', e.lngLat.wrap());
+      //setBboxPoints([e.lngLat.wrap(), bboxPoints[1]]);
     });
 
     map.current.on("mouseup", (e) => {
-      console.log("second point", e.lngLat.wrap());
+      console.log('p2:', e.lngLat.wrap());
+      //setBboxPoints([bboxPoints[0], e.lngLat.wrap()]);
+      updateBboxPoints();
     });
 
     // add search bar
@@ -224,12 +243,7 @@ const MapView = (props) => {
       setLat(map.current.getCenter().lat.toFixed(4));
       setZoom(map.current.getZoom().toFixed(2));
     });
-
-    return Document.getElementBy
   });
-
-
-
 
   // redraw path every time coords are updated
   useEffect(() => {

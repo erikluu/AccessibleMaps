@@ -31,12 +31,11 @@ const createQuery = require('../modules/createQuery');
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
-const INITIAL_HEIGHTS = [];
 
 const Sidebar = (props) => {
   const {map, updateStops, sidebarState, setSidebarState, bboxAllowed, setBboxAllowed} = props;
 
-  const [heights, setHeights] = useState(INITIAL_HEIGHTS);
+  const [routeData, setRouteData] = useState(null);
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setCurPosition] = useState();
@@ -71,18 +70,7 @@ const Sidebar = (props) => {
     setCoords([...coords, data]);
   };
 
-  const addLoc = (item) => {
-    console.log(item);
-    const newCoords = item.geometry.coordinates;
-    setNewLoc(newCoords);
-    const marker = new map.mapboxgl.Marker({
-      draggable: true,
-    })
-    .setLngLat(newCoords)
-    .addTo(map.map);
-
-    return item.place_name;
-  };
+  const [maxSlope, setMaxSlope] = useState(null);
 
   const [optionsDisplay, setOptionsDisplay] = useState("none");
   const toggleOptions = () => {
@@ -99,7 +87,6 @@ const Sidebar = (props) => {
       div2.style.visibility = "visible";
     }
   }
-
   const getOptionsButtonText = () => {
     if (optionsDisplay == "none") {
       return "More Options";
@@ -108,7 +95,6 @@ const Sidebar = (props) => {
       return "Back";
     }
   };
-
   const getOptionsButtonIcon = () => {
     if (optionsDisplay == "none") {
       return <SettingsIcon/>;
@@ -118,11 +104,26 @@ const Sidebar = (props) => {
     }
   };
 
+  
+
+  // updates path list with new coordinates for each searchbar
+  const addLoc = (item) => {
+    console.log(item);
+    const newCoords = item.geometry.coordinates;
+    setNewLoc(newCoords);
+    const marker = new map.mapboxgl.Marker({
+      draggable: true,
+    })
+    .setLngLat(newCoords)
+    .addTo(map.map);
+
+    return item.place_name;
+  };
+
 
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
-    let slope = 40;
-    const query = createQuery.createQuery(coords, slope);
+    const query = createQuery.createQuery(coords, maxSlope);
 
     if (query) {
       console.log("got", query);
@@ -138,7 +139,7 @@ const Sidebar = (props) => {
           elevation: points[i][2]
         });
       }
-      setHeights(elevations);
+      setRouteData(points);
       updateStops(points);      
     }
     
@@ -297,10 +298,10 @@ const Sidebar = (props) => {
             Find Route
           </Button>
           <div className="options" id="options" >
-            <AdvancedOptions />
+            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} />
           </div>
           <div className="chart-wrapper">
-            <ElevationChart/>
+            <ElevationChart routeData={routeData} map={map} />
           </div>
         </div>
         <div className="nav-bottom">

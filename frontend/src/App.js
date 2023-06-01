@@ -10,6 +10,8 @@ import MapView from "./components/MapView";
   href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 />;
 
+const INITIAL_BBOX = [];
+
 const App = () => {
   const [map, setMap] = useState();
   const updateMap = (map) => {
@@ -26,6 +28,8 @@ const App = () => {
   const updateBbox = (prev) => {
     setBboxAllowed(!prev);
   };
+
+  const [bbox, setBbox] = useState(INITIAL_BBOX);
  
   return (
     <div className="top-level" >
@@ -42,7 +46,8 @@ const App = () => {
         updateMap={updateMap} 
         stops={stops} 
         setSidebarState={setSidebarState} 
-        bboxAllowed={bboxAllowed} 
+        bboxAllowed={bboxAllowed}
+        setBbox={setBbox}
       />
     </div>
   );

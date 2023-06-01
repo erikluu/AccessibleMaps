@@ -12,11 +12,29 @@ import Divider from '@mui/material/Divider';
 const DEFAULT_ADA_SLOPE = 8;
 
 const AdvancedOptions = (props) => {
-  const {bboxAllowed, setBboxAllowed} = props;
+  const {map, setMaxSlope} = props;
 
-  const [slope, setSlope] = useState(DEFAULT_ADA_SLOPE); 
+  const [slope, setSlope] = useState(0); 
   const handleSliderChange = (event, newValue) => {
     setSlope(newValue);
+  };
+
+  useEffect(() => {
+    setMaxSlope(slope);
+  }, [slope]);
+
+  const clearTheBox = () => {
+    const box = document.getElementById("bbox");
+    if (box) {
+      box.parentNode.removeChild(box);
+
+      map.map.dragPan.enable();
+      map.map.doubleClickZoom.enable();
+      map.map.keyboard.enable();
+      map.map.scrollZoom.enable();
+      map.map.dragRotate.enable();
+      map.map.touchZoomRotate.enable();
+    }
   };
 
   return (
@@ -30,7 +48,7 @@ const AdvancedOptions = (props) => {
       <Typography 
         variant="body2"
       >
-        Select the maximum grade, returned route will not exceed this value. The default value is 8% grade.
+        Select the maximum grade, as a percent. The returned route will not exceed this value. Standard ADA grade is 8%.
       </Typography>
       <Stack 
         direction="row"
@@ -52,7 +70,7 @@ const AdvancedOptions = (props) => {
           title="Remove Filter"
         >
           <IconButton 
-            onClick={() => {return;}}
+            onClick={() => setMaxSlope(null)}
           >
             <CancelIcon/>
           </IconButton>
@@ -81,7 +99,7 @@ const AdvancedOptions = (props) => {
       >
         <Button
           sx={{ mt: 2, color: "gray", borderColor: "gray",  }} 
-          onClick={() => setBboxAllowed(bboxAllowed)}
+          //onClick={() => setBboxAllowed(bboxAllowed)}
           variant="outlined"
           size="large"
         >
@@ -89,7 +107,7 @@ const AdvancedOptions = (props) => {
         </Button>
         <Button
           sx={{ mt: 2, color: "gray", borderColor: "gray" }} 
-          onClick={() => setBboxAllowed(bboxAllowed)}
+          onClick={() => clearTheBox()}
           variant="outlined"
           size="large"
         >
