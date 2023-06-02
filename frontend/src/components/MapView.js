@@ -210,8 +210,8 @@ function MapView() {
 
   return (
     <div>
-      <div ref={mapContainer} className="map-container" />
       <button onClick={getRoute} id="routing" className="sidebar3">Find Route</button>
+      <div ref={mapContainer} className="map-container" />
     </div>
   );
 }
