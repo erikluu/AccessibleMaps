@@ -14,9 +14,17 @@ const defZoom = 9.00;
 
 const SIDEBAR_WIDTH_PADDING = { left: 325 };
 const INITIAL_BBOX = [0, 0];
-
-const geojson1 = {};
-const geojson2 = {};
+const INITIAL_ROUTE = {
+  "type": "FeatureCollection",
+  "features": [{
+      "type": "Feature",
+      "geometry": {
+          "type": "LineString",
+          "coordinates": [[-2000, -2000]]
+      }
+  }]
+};
+const INITIAL_POINT = {type: "Point", coordinates: [-2000, -2000]};
 
 const MapView = (props) => {
   const mapContainer = useRef(null);
@@ -171,7 +179,7 @@ const MapView = (props) => {
         "type": "line",
         "source": {
             "type": "geojson",
-            "data": geojson1 
+            "data": INITIAL_ROUTE 
         },
         "layout": {
             "line-join": "round",
@@ -189,7 +197,7 @@ const MapView = (props) => {
         'id': 'point',
         'source': {
           type: "geojson",
-          data: geojson2
+          data: INITIAL_POINT
         },
         'type': 'circle',
         'paint': {
@@ -235,7 +243,7 @@ const MapView = (props) => {
 
     map.current.easeTo({
       padding: SIDEBAR_WIDTH_PADDING,
-      duration: 0 // in MS
+      duration: 0
     });
 
     props.updateMap({
@@ -262,8 +270,6 @@ const MapView = (props) => {
   }, [currentPath]);
 
   useEffect(() => {
-    console.log("slidddddddddddddeeee");
-
     if (sidebarState) {
       map.current.easeTo({
         padding: SIDEBAR_WIDTH_PADDING,

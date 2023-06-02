@@ -129,7 +129,7 @@ const ElevationChart = (props) => {
 
       const curDistance = calcDistance(curPoint[0], curPoint[1], nextPoint[0], nextPoint[1]);
       distance += curDistance;
-      distances.push(distance);
+      distances.push(Math.round(distance * 100) / 100);
       heights.push(curPoint[2]);
     }
     heights.push(routeData[routeData.length - 1][2]);

@@ -300,7 +300,10 @@ const Sidebar = (props) => {
           <div className="options" id="options" >
             <AdvancedOptions map={map} setMaxSlope={setMaxSlope} />
           </div>
-          <div className="chart-wrapper">
+          <div 
+            className="chart-wrapper" 
+            onMouseLeave={() => map.map.getSource("point").setData({type: "Point", coordinates: [-2000, -2000]})}
+          >
             <ElevationChart routeData={routeData} map={map} />
           </div>
         </div>

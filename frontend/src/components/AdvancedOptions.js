@@ -83,7 +83,7 @@ const AdvancedOptions = (props) => {
       <Typography
         variant="h6"
       >
-        Select Roads to Avoid
+        Select Sections to Avoid
       </Typography>
       <br className="menu-spacer"></br>
       <Typography 
