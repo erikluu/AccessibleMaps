@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import ElevationChart from './ElevationChart';
+import AdvancedOptions from './AdvancedOptions';
 
 import axios from "axios";
 
@@ -18,29 +19,23 @@ import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Stack from '@mui/material/Stack'
-import Slider from '@mui/material/Slider';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import Typography from '@mui/material/Typography';
-
+import SettingsIcon from '@mui/icons-material/Settings';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import HelpIcon from '@mui/icons-material/Help';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const createQuery = require('../modules/createQuery');
 
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
-const INITIAL_HEIGHTS = [];
-
-const MAX_ADA_SLOPE = 8;
 
 const Sidebar = (props) => {
   const {map, updateStops, sidebarState, setSidebarState, bboxAllowed, setBboxAllowed} = props;
 
-  const [slope, setSlope] = useState(MAX_ADA_SLOPE); 
-  const handleSliderChange = (event, newValue) => {
-    setSlope(newValue);
-  };
-
-  const [heights, setHeights] = useState(INITIAL_HEIGHTS);
+  const [routeData, setRouteData] = useState(null);
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setCurPosition] = useState();
@@ -75,6 +70,43 @@ const Sidebar = (props) => {
     setCoords([...coords, data]);
   };
 
+  const [maxSlope, setMaxSlope] = useState(null);
+
+  const [optionsDisplay, setOptionsDisplay] = useState("none");
+  const toggleOptions = () => {
+    const div1 = document.getElementById("options");
+    const div2 = document.getElementById("stoplist");
+    if (optionsDisplay == "none") {
+      setOptionsDisplay("block");
+      div1.style.display = "block";
+      div2.style.visibility = "hidden";
+    }
+    else {
+      setOptionsDisplay("none");
+      div1.style.display = "none";
+      div2.style.visibility = "visible";
+    }
+  }
+  const getOptionsButtonText = () => {
+    if (optionsDisplay == "none") {
+      return "More Options";
+    }
+    else {
+      return "Back";
+    }
+  };
+  const getOptionsButtonIcon = () => {
+    if (optionsDisplay == "none") {
+      return <SettingsIcon/>;
+    }
+    else {
+      return <ArrowBackIcon/>;
+    }
+  };
+
+  
+
+  // updates path list with new coordinates for each searchbar
   const addLoc = (item) => {
     console.log(item);
     const newCoords = item.geometry.coordinates;
@@ -91,7 +123,7 @@ const Sidebar = (props) => {
 
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
-    const query = createQuery.createQuery(coords, slope);
+    const query = createQuery.createQuery(coords, maxSlope);
 
     if (query) {
       console.log("got", query);
@@ -107,7 +139,7 @@ const Sidebar = (props) => {
           elevation: points[i][2]
         });
       }
-      setHeights(elevations);
+      setRouteData(points);
       updateStops(points);      
     }
     
@@ -247,43 +279,62 @@ const Sidebar = (props) => {
               <NavigateBeforeIcon />
             </IconButton>
           </Stack>
+          <br className="header-br"></br>
           <Divider/>
         </div>
-        <List className="navlist">
-          {renderStops()}
-        </List>
-        <Divider>
-          <NavigationOutlinedIcon sx={{ color: "black" }}/>
-        </Divider>
-        <Button 
-          sx={{ mt: 2 }} 
-          variant="contained" 
-          size="large"
-          onClick={() => getRoute()}
-        >
-          Find Route
-        </Button>
-        <br/><br/>
-        <h4>Maximum Slope</h4>
-        <div style={{ margin: "20px" }} >
-          <Slider
-            min={0}
-            max={15}
-            default={MAX_ADA_SLOPE}
-            valueLabelDisplay="auto"
-            value={slope}
-            onChange={handleSliderChange}    
-          />
+        <div className="navbar-body">
+          <List className="navlist" id="stoplist" >
+            {renderStops()}
+          </List>
+          <Divider>
+            <NavigationOutlinedIcon sx={{ color: "black" }}/>
+          </Divider>
+          <Button 
+            sx={{ mt: 1 }} 
+            variant="contained" 
+            size="large"
+            onClick={() => getRoute()}
+          >
+            Find Route
+          </Button>
+          <div className="options" id="options" >
+            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} />
+          </div>
+          <div 
+            className="chart-wrapper" 
+            onMouseLeave={() => map.map.getSource("point").setData({type: "Point", coordinates: [-2000, -2000]})}
+          >
+            <ElevationChart routeData={routeData} map={map} />
+          </div>
         </div>
-        <Button
-          sx={{ mt: 2 }} 
-          variant="contained" 
-          size="large"
-          onClick={() => setBboxAllowed(bboxAllowed)}
-        >
-          Avoid Mode
-        </Button>
-        
+        <div className="nav-bottom">
+          <Divider/>
+          <br className="footer-br"></br>
+          <Stack   
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            spacing={5}
+          >
+            <Button 
+              variant="raised"
+              endIcon={getOptionsButtonIcon()} 
+              sx={{ color: "gray" }}
+              size="large"
+              onClick={() => toggleOptions()}
+            >
+              {getOptionsButtonText()}
+            </Button>
+            <Button 
+              variant="raised"
+              endIcon={<HelpIcon/>} 
+              sx={{ color: "gray" }}
+              size="large"
+            >
+              Help
+            </Button>
+          </Stack>
+        </div>
       </div>
     </Drawer>
   );

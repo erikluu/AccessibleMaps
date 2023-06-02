@@ -1,57 +1,160 @@
 import React, { useRef, useEffect, useState } from "react";
-import mapboxgl, {} from "mapbox-gl";
+import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
-//import DirectionsOutlinedIcon from '@mui/icons-material/DirectionsOutlined';
-import axios from 'axios'
+import axios from "axios";
 
-console.log(process.env);
+const createQuery = require('../modules/createQuery');
+
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
-const defLNG = -120.6252; // default lat/long is set to SLO
+// default lat/long is set to SLO
+const defLNG = -120.6252; 
 const defLAT = 35.2628;
 const defZoom = 9.00;
 
-const route1coords = [
-  [-120.669373, 35.304410],
-  [-120.667825, 35.302423],
-  [-120.668112, 35.302322],
-  [-120.668584, 35.302055],
-  [-120.669997, 35.300665],
-  [-120.671043, 35.299108],
-  [-120.671599, 35.298879],
-  [-120.672737, 35.298826],
-  [-120.67436, 35.298190],
-  [-120.674156, 35.297916],
-  [-120.673775, 35.297704],
-  [-120.671281, 35.294490],
-  [-120.670999, 35.294176],
-  [-120.670128, 35.293591],
-  [-120.669802, 35.293148],
-  [-120.669763, 35.290401],
-  [-120.669377, 35.288805],
-  [-120.668299, 35.286070],
-  [-120.667511, 35.285137],
-  [-120.667262, 35.284824],
-  [-120.66529, 35.282592]
-];
+const SIDEBAR_WIDTH_PADDING = { left: 325 };
+const INITIAL_BBOX = [0, 0];
+const INITIAL_ROUTE = {
+  "type": "FeatureCollection",
+  "features": [{
+      "type": "Feature",
+      "geometry": {
+          "type": "LineString",
+          "coordinates": [[-2000, -2000]]
+      }
+  }]
+};
+const INITIAL_POINT = {type: "Point", coordinates: [-2000, -2000]};
 
-function MapView() {
+const MapView = (props) => {
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const canvas = useRef(null);
   const [lng, setLng] = useState(defLNG);
   const [lat, setLat] = useState(defLAT);
   const [zoom, setZoom] = useState(defZoom);
 
-  const [waypoints, setWaypoints] = useState([]); // list of lists of coordinates in order
-  const [routes, setRoutes] = useState(null); // list of route objects 
+  const currentPath = props.stops;
+  const {sidebarState, setSidebarState, bboxAllowed, setBbox} = props;
+
+  const [bboxPoints, setBboxPoints] = useState(null);
+  const updateBboxPoints = (p) => {
+    console.log("updating box");
+    setBboxPoints("nice");
+
+    console.log("is now", bboxPoints);
+
+  };
+
+  let start, box, current;
+
+  const mousePos = (e) => {
+    const rect = canvas.current.getBoundingClientRect();
+  
+    return new mapboxgl.Point(
+      e.clientX - rect.left - canvas.current.clientLeft,
+      e.clientY - rect.top - canvas.current.clientTop
+    );
+  };
+
+  const mouseDown = (e) => {
+    // Continue the rest of the function if bbox is allowed
+    if (!(e.shiftKey && e.button === 0)) return;
+     
+    // Disable default drag zooming when the shift key is held down.
+    map.current.dragPan.disable();
+    map.current.boxZoom.disable();
+    map.current.doubleClickZoom.disable();
+    map.current.keyboard.disable();
+    map.current.scrollZoom.disable();
+    map.current.dragRotate.disable();
+    map.current.touchZoomRotate.disable();
+     
+    // Call functions for the following events
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+
+    // create box
+    box = document.createElement('div');
+    box.classList.add('boxdraw');
+    box.id = "bbox";
+    canvas.current.appendChild(box);
+   
+    // Capture the first xy coordinates
+    start = mousePos(e);
+  };
+
+  const onMouseMove = (e) => {
+    // Capture the ongoing xy coordinates
+    current = mousePos(e);
+          
+    const minX = Math.min(start.x, current.x),
+      maxX = Math.max(start.x, current.x),
+      minY = Math.min(start.y, current.y),
+      maxY = Math.max(start.y, current.y);
+     
+    // Adjust width and xy position of the box element ongoing
+    const pos = `translate(${minX}px, ${minY}px)`;
+    box.style.transform = pos;
+    box.style.width = maxX - minX + 'px';
+    box.style.height = maxY - minY + 'px';
+  };
+     
+  const onMouseUp = (e) => {
+    // Capture xy coordinates
+    //finish([start, mousePos(e)]);
+    //console.log("second point", e.lngLat.wrap());
+    finish();
+  };
+     
+  const onKeyDown = (e) => {
+    // If the ESC key is pressed
+    if (e.keyCode === 27) finish();
+  };
+  
+  const finish = () => {
+    // Remove these events now that finish has been called.
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("keydown", onKeyDown);
+    document.removeEventListener("mouseup", onMouseUp);
+
+    //map.current.dragPan.enable();
+
+    updateBboxPoints(69);
+  };
+
+  // route render function
+  const updatePath = () => {
+    const points = currentPath.map(pp => [pp[1], pp[0]]);  
+    const geoJson = {
+      "type": "FeatureCollection",
+      "features": [{
+          "type": "Feature",
+          "geometry": {
+              "type": "LineString",
+              "coordinates": points
+          }
+      }]
+    };
+  
+    map.current.getSource('data-update').setData(geoJson);
+
+    const bounds = new mapboxgl.LngLatBounds(points[0], points[0]);
+    for (const p of points) {
+      bounds.extend(p);
+    } 
+    map.current.fitBounds(bounds, {
+      padding: 20
+    });
+
+  };
 
   const addLoc = (item) => {
     const coords = item.geometry.coordinates;
-    const marker = new mapboxgl.Marker({
+    new mapboxgl.Marker({
       draggable: true,
-    })
-    .setLngLat(coords)
-    .addTo(map.current);
+    }).setLngLat(coords).addTo(map.current);
 
     return item.place_name;
   };
@@ -64,6 +167,60 @@ function MapView() {
       center: [lng, lat],
       zoom: zoom,
     });
+
+    map.current.boxZoom.disable();
+    //map.current.doubleClickZoom.disable();
+    //map.current.scrollZoom.disable();
+
+    map.current.on("load", () => {
+      // route layer
+      map.current.addLayer({
+        "id": "data-update",
+        "type": "line",
+        "source": {
+            "type": "geojson",
+            "data": INITIAL_ROUTE 
+        },
+        "layout": {
+            "line-join": "round",
+            "line-cap": "round"
+        },
+        "paint": {
+            "line-color": "#4285F4",
+            "line-width": 8
+        }
+      });
+
+
+      // tracks a point along the current route
+      map.current.addLayer({
+        'id': 'point',
+        'source': {
+          type: "geojson",
+          data: INITIAL_POINT
+        },
+        'type': 'circle',
+        'paint': {
+          'circle-radius': 10,
+          'circle-color': "#FF0000"
+        }
+      });
+
+      canvas.current = map.current.getCanvasContainer();
+      canvas.current.addEventListener("mousedown", mouseDown, true);
+    });
+
+    map.current.on("mousedown", (e) => {
+      console.log('p1:', e.lngLat.wrap());
+      //setBboxPoints([e.lngLat.wrap(), bboxPoints[1]]);
+    });
+
+    map.current.on("mouseup", (e) => {
+      console.log('p2:', e.lngLat.wrap());
+      //setBboxPoints([bboxPoints[0], e.lngLat.wrap()]);
+      updateBboxPoints();
+    });
+
     // add search bar
     map.current.addControl(
       new MapboxGeocoder({
@@ -84,91 +241,16 @@ function MapView() {
       })
     );
 
-    // add marker to mouse location on click
-    // map.current.on("click", (e) => {
-    //   new mapboxgl.Marker().setLngLat(e.lngLat).addTo(map.current);
-    // });
-    
-    map.current.on('load', () => {
-      //new mapboxgl.Marker().setLngLat([-120.669373, 35.304410]).addTo(map.current);
-      //new mapboxgl.Marker().setLngLat([-120.66529, 35.282592]).addTo(map.current);
-      // map.current.addSource('route1', {
-      //   'type': 'geojson',
-      //   'data': {
-      //     'type': 'Feature',
-      //     'properties': {},
-      //     'geometry': {
-      //       'type': 'LineString',
-      //       'coordinates': route1coords
-      //     }
-      //   }
-      // });
-      // map.current.addLayer({
-      //   'id': 'route1',
-      //   'type': 'line',
-      //   'source': 'route1',
-      //   'layout': {
-      //     'line-join': 'round',
-      //     'line-cap': 'round'
-      //   },
-      //   'paint': {
-      //     'line-color': '#3386c0',
-      //     'line-width': 8
-      //   }
-      // });
-
-
-      // fit route to screen
-      // document.getElementById('zoomto').addEventListener('click', () => {  
-      //   const coordinates = route1coords;
-
-      //   const bounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
-      //   for (const coord of coordinates) {
-      //     bounds.extend(coord);
-      //   } 
-      //   map.current.fitBounds(bounds, {
-      //     padding: 20
-      //   });
-      // });
-
-      // document.getElementById('routing').addEventListener('click', () => {
-      //   const markers = document.querySelectorAll('[aria-label="Map marker"]');
-      //   //const markers = document.getElementsByClassName("mapboxgl-ctrl-icon");
-      
-      //   for(let i = 0; i < markers.length; i++) {
-      //       console.log("marker ", i);
-      //       console.log(markers[i]);
-      //   }
-      // });
-
+    map.current.easeTo({
+      padding: SIDEBAR_WIDTH_PADDING,
+      duration: 0
     });
 
-
-
+    props.updateMap({
+      map: map.current,
+      mapboxgl,
+    });
   });
-
-  // // get route
-  // useEffect(() => {
-  //   if (!map.current) return; // wait for map to initialize
-  //   const getURL = (waypoints, routeDistanceUnit) => {
-  //     let url = `http://localhost:4000/api/route?unit=${routeDistanceUnit}`;
-  //     for (let i = 0; i < waypoints.length; i++) {
-  //       url += `&wp${i}=${waypoints[i]}`;
-  //     }
-  //     return url;
-  //   }
-    
-  //   axios.get(`${getURL(waypoints, routeDistanceUnit)}`)
-  //     .then(response => {
-  //       // setRoutePath(response);
-  //       // setRouteDistance(response.data.resourceSets[0].resources[0].travelDistance);
-  //       console.log(response);
-  //     })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
-  // }, [waypoints, routeDistanceUnit]);
-
 
   useEffect(() => {
     if (!map.current) return; // wait for map to initialize
@@ -179,42 +261,37 @@ function MapView() {
     });
   });
 
-    // get route from /api/route
-    const getRoute = async () => {
-      // one steep segment
-      // const wp0 = [35.290401, -120.669763];
-      // const wp1 = [35.2813, -120.6608];
-      // const unit = "imperial";
+  // redraw path every time coords are updated
+  useEffect(() => {
+    if (!currentPath) return;
+    if (currentPath.length == 0) return;
+    console.log("trying to re render path");
+    updatePath();
+  }, [currentPath]);
 
-      // // steep for sure
-      // // const wp0 = [47.763172, -122.318642];
-      // // const wp1 = [47.762321, -122.316131];
-      // // const unit = "imperial";
-  
-      // // [lat, lng] -> "lat,lng"
-      const waypoint = (wp) => {
-        return `${wp[0]},${wp[1]}`;
-      }
-
-      const wp0 = [35.282938207678775, -120.66508077972371]
-      const wp1 = [35.282578339823296, -120.65605314368642]
-  
-      // send waypoints to server api/route
-      await axios.get(`http://localhost:4000/api/route?units=metric&wp0=${waypoint(wp0)}&wp1=${waypoint(wp1)}&maxGrade=10`)
-      // await axios.get(`http://localhost:4000/api/route?units=metric&wp0=35.2827,-120.66511&wp1=35.3006,-120.663217&maxGrade=10`)
-        .then(response => {
-          console.log(response.data);
-        }
-      );
+  useEffect(() => {
+    if (sidebarState) {
+      map.current.easeTo({
+        padding: SIDEBAR_WIDTH_PADDING,
+        duration: 1000
+      });
     }
+    else {
+      map.current.easeTo({
+        padding: { left: 0 },
+        duration: 1000
+      });
+    }
+  }, [sidebarState]);
 
   return (
     <div>
+      <button onClick={() => setSidebarState(true)} className="sidebar-toggle">
+        &#8250;
+      </button>
       <div ref={mapContainer} className="map-container" />
     </div>
   );
-}
+};
+
 export default MapView;
-
-
-
