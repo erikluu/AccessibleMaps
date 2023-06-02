@@ -53,6 +53,10 @@ const calcDistance = (lat1, lon1, lat2, lon2) => {
 const ElevationChart = (props) => {
   const {routeData, map} = props;
 
+  const displayGraph = () => {
+    return routeData ? "block" : "none";
+  };
+
   const updateCurPoint = (index) => {    
     const p = routeData[index];
     const geoJson = {
@@ -153,7 +157,7 @@ const ElevationChart = (props) => {
   }, [curPoint]);
 
   return (
-    <div className="inner-chart-container">
+    <div className="inner-chart-container" style={{ display: displayGraph() }} >
       <Line options={options} data={chartData} plugins={plugins} key={cheese}/>
     </div>
   );
