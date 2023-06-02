@@ -44,7 +44,7 @@ const calcDistance = (lat1, lon1, lat2, lon2) => {
       dist = dist * 1.609344;
       
       // convert to m
-      dist = dist * 1000;
+      //dist = dist * 1000;
 
       return dist;
   }
@@ -93,13 +93,13 @@ const ElevationChart = (props) => {
       //y1: { type: 'linear', display: true, position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }},
     },
     plugins: {
-      title: { align: "end", display: true, text: "Distance, m / Elevation, m" },
+      title: { align: "end", display: true, text: "Distance, km / Elevation, m" },
       legend: { display: false },
       tooltip: {
         displayColors: false,
         callbacks: {
           title: (tooltipItems) => {
-            return "Distance: " + tooltipItems[0].label + 'm'
+            return "Distance: " + tooltipItems[0].label + 'km'
           },
           label: (tooltipItem) => {
             setCurPoint(tooltipItem.dataIndex);
@@ -125,7 +125,7 @@ const ElevationChart = (props) => {
 
       const curDistance = calcDistance(curPoint[0], curPoint[1], nextPoint[0], nextPoint[1]);
       distance += curDistance;
-      distances.push(Math.round(distance));
+      distances.push(distance);
       heights.push(curPoint[2]);
     }
     heights.push(routeData[routeData.length - 1][2]);
