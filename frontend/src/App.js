@@ -32,7 +32,7 @@ const App = () => {
   const [bbox, setBbox] = useState(INITIAL_BBOX);
  
   return (
-    <div className="top-level" >
+    <div className="top-level" id="top-level" data-cur={-1} >
       <Sidebar 
         map={map} 
         updateStops={updateStops} 

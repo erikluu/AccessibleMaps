@@ -39,10 +39,10 @@ const MapView = (props) => {
 
   const [bboxPoints, setBboxPoints] = useState(null);
   const updateBboxPoints = (p) => {
-    console.log("updating box");
+    //console.log("updating box");
     setBboxPoints("nice");
 
-    console.log("is now", bboxPoints);
+    //console.log("is now", bboxPoints);
 
   };
 
@@ -211,12 +211,12 @@ const MapView = (props) => {
     });
 
     map.current.on("mousedown", (e) => {
-      console.log('p1:', e.lngLat.wrap());
+      //console.log('p1:', e.lngLat.wrap());
       //setBboxPoints([e.lngLat.wrap(), bboxPoints[1]]);
     });
 
     map.current.on("mouseup", (e) => {
-      console.log('p2:', e.lngLat.wrap());
+      //console.log('p2:', e.lngLat.wrap());
       //setBboxPoints([bboxPoints[0], e.lngLat.wrap()]);
       updateBboxPoints();
     });
