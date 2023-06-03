@@ -1,10 +1,10 @@
 
 const createQuery = (path, slope) => {
-    if (slope == null || slope == 0) 
+    if (slope == null || slope === 0) 
         slope = 50;
 
     console.log('given', path, slope);
-    if (path.length != 2) return;
+    if (path.length !== 2) return;
 
     let wp0 = "";
     wp0 += path[0].loc[1];
