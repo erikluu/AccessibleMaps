@@ -37,7 +37,6 @@ const Sidebar = (props) => {
 
   const [dragging, setDragging] = useState(false);
 
-
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setPosition] = useState();
   const setCurPosition = (i) => {
