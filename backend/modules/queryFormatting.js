@@ -50,16 +50,11 @@ function formatRest(defaultQuery, query) {
     return rest;
 }
 
-// /*
-//     Format the avoidance bboxes into a URL string
-//     avoid[areas]=bbox1|bbox2|bbox3|...
-//     bbox=lng,lat,lng,lat
-//     bbox=bottomRight,topLeft
-// */
+
 function formatAvoidance(url, bboxes) {
-    let avoidanceQuery = url.includes('avoid[areas]=') ? '|' : '&avoid[areas]=';
+    let avoidanceQuery = url.includes('&avoid[areas]=') ? '|' : '&avoid[areas]=';
     for (let i = 0; i < bboxes.length; i++) {
-        avoidanceQuery += `bbox:${bboxes[i].bottomRight},${bboxes[i].topLeft}`;
+        avoidanceQuery += encodeURIComponent(`bbox:${bboxes[i].bottomRight.lng},${bboxes[i].bottomRight.lat},${bboxes[i].topLeft.lng},${bboxes[i].topLeft.lat}`);
         if (i !== bboxes.length - 1) {
             avoidanceQuery += '|';
         }

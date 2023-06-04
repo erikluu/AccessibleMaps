@@ -2,7 +2,7 @@
 
 AccessibleMaps is a web-based application that provides accessible routes for individuals with disabilities.
 
-The application provides accessible routes for various modes of transportation such as driving, biking, transit, walking, and now an option for ADA users.
+The application focuses on providing safe and accessible routes for ADA users.
 
 ## Features (planned)
 * Accessible routes for ADA users
@@ -12,9 +12,11 @@ The application provides accessible routes for various modes of transportation s
 
 ## For Development
 * npm run frontend
-* npm run backend
+* npm run backend OR cd backend && npm run start:inspect
 * [Internal Documentation](https://erikluu.notion.site/Backend-Reference-cf7a4b5bf4e74df686fd18d05d67d10c)
 
 ## More Details
 Cal Poly 2023 Senior Project   
-Erik Luu, Carlo Ruggiero
+Erik Luu, Carlo Ruggiero   
+Advisor: Dr. Kelly Bodwin
+
