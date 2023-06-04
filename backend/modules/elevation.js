@@ -83,9 +83,7 @@ function segmentPolylines(routes) {
                     end: end,
                     points: interpolatePointsAlongPolyline(start, end, 4),
                     totalDistance: 0,
-                    tiles: [],
-                    isSteep: false,
-                    bbox: null,
+                    tiles: []
                 }
                 formattedSection.segments.push(segment);
             }
@@ -113,6 +111,7 @@ function getDistanceBetweenAllPoints(routes) {
                     start[2] = distance;
                     totalDistance += distance;
                 }
+                segment.points[segment.points.length - 1][2] = 0;
                 segment.totalDistance = totalDistance;
             }
         }
@@ -132,6 +131,7 @@ function coordinateToTile(latitude, longitude, zoom) {
 function requestElevationTile(tileX, tileY, zoom) {
     try {
         const endpoint = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${tileX}/${tileY}.pngraw?access_token=${process.env.MAPBOXGL_API_KEY}`;
+        console.log(endpoint);
         return new Promise((resolve, reject) => {
             get(endpoint, (response) => {
                 let data;
@@ -161,14 +161,15 @@ function getElevationTiles(routes, zoom) {
         const route = newRoutes[i];
         for (let j = 0; j < route.sections.length; j++) {
             const section = route.sections[j];
-            for (let k = 0; k < section.segments.length; k++) {
+            for (let k = 0; k < section.segments.length; k++) { // what if this spans >2 tiles? not just start and ending points?
                 const segment = section.segments[k];
-                const startTile = coordinateToTile(segment.start[0], segment.start[1], zoom);
-                const endTile = coordinateToTile(segment.end[0], segment.end[1], zoom);
-                const tiles = {startTile: startTile, usingSameTile: true};
-                if (JSON.stringify(startTile) != JSON.stringify(endTile)) {
-                    tiles.endTile = endTile;
-                    tiles.usingSameTile = false;
+                let tiles = [];
+                for (let l = 0; l < segment.points.length; l++) {
+                    const point = segment.points[l];
+                    const tile = coordinateToTile(point[0], point[1], zoom);
+                    if (!tiles.includes(tile)) {
+                        tiles.push(tile);
+                    }
                 }
                 segment.tiles = tiles;
             }
@@ -186,9 +187,11 @@ function getTilePromises(routes, zoom) {
             for (let k = 0; k < section.segments.length; k++) {
                 const segment = section.segments[k];
                 const tiles = segment.tiles;
-                tilePromises[`${tiles.startTile[0]},${tiles.startTile[1]}`] = requestElevationTile(tiles.startTile[0], tiles.startTile[1], zoom);
-                if (!tiles.usingSameTile) {
-                    tilePromises[`${tiles.endTile[0]},${tiles.endTile[1]}`] = requestElevationTile(tiles.endTile[0], tiles.endTile[1], zoom);
+                for (let l = 0; l < tiles.length; l++) {
+                    const tile = tiles[l];
+                    if (!Object.keys(tilePromises).includes(`${tile[0]},${tile[1]}`)) {
+                        tilePromises[`${tile[0]},${tile[1]}`] = requestElevationTile(tile[0], tile[1], zoom);
+                    }
                 }
             }
         }
@@ -205,12 +208,15 @@ async function resolveObjectPromises(obj) {
     return obj;
   }
 
-function getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom) {
+function getPixelValue(tileBuffers, point, zoom) {
+    const [tileX, tileY] = coordinateToTile(point[0], point[1], zoom);
+    const tileBuffer = tileBuffers[`${tileX},${tileY}`]; // finds a buffer that doesn't exist in tileBuffers... why?
+
     const png = PNG.sync.read(tileBuffer);
     const pixels = png.data;
 
-    const pixelX = mercator.px([coordinate[1], coordinate[0]], zoom)[0] - tileX * 256;
-    const pixelY = mercator.px([coordinate[1], coordinate[0]], zoom)[1] - tileY * 256;
+    const pixelX = mercator.px([point[1], point[0]], zoom)[0] - tileX * 256;
+    const pixelY = mercator.px([point[1], point[0]], zoom)[1] - tileY * 256;
     const pixelIndex = (256 * pixelY + pixelX) * 4;
     const r = pixels[pixelIndex];
     const g = pixels[pixelIndex + 1];
@@ -219,20 +225,7 @@ function getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom) {
     return elevation;
 }
 
-function getElevationValue(tileBuffer, coordinate, zoom) {
-    const [tileX, tileY] = coordinateToTile(coordinate[0], coordinate[1], zoom);
-    const elevation = getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom);
-    return elevation;
-}
-
-function getGrade(start, end) {
-    const distance = start[2];
-    const elevation = end[3] - start[3];
-    const grade = elevation / distance * 100;
-    return grade;
-}
-
-function getElevationAndGrade(routes, tileBuffers, zoom) {
+function getElevations(routes, tileBuffers, zoom) {
     let newRoutes = JSON.parse(JSON.stringify(routes));
     for (let i = 0; i < newRoutes.length; i++) {
         const route = newRoutes[i];
@@ -240,25 +233,46 @@ function getElevationAndGrade(routes, tileBuffers, zoom) {
             const section = route.sections[j];
             for (let k = 0; k < section.segments.length; k++) {
                 const segment = section.segments[k];
-                const tiles = segment.tiles;
-                const startTileBuffer = tileBuffers[`${tiles.startTile[0]},${tiles.startTile[1]}`];
-                const startElevation = getElevationValue(startTileBuffer, segment.start, zoom);
-                segment.start.push(startElevation);
-                if (!tiles.usingSameTile) {
-                    const endTileBuffer = tileBuffers[`${tiles.endTile[0]},${tiles.endTile[1]}`];
-                    const endElevation = getElevationValue(endTileBuffer, segment.end, zoom);
-                    segment.end.push(endElevation);
-                } else {
-                    segment.end.push(startElevation);
+                for (let l = 0; l < segment.points.length; l++) {
+                    const point = segment.points[l];
+                    const elevation = getPixelValue(tileBuffers, point, zoom);
+                    point.push(elevation);
                 }
-                segment.grade = getGrade(segment.start, segment.end);
+            }
+        }
+    }
+    return newRoutes;
+}
+
+function calculateGrade(start, end) {
+    const distance = start[2];
+    const elevation = end[3] - start[3];
+    const grade = elevation / distance * 100;
+    return grade;
+}
+
+function getGradeBetweenPoints(routes) {
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                for (let l = 0; l < segment.points.length - 1; l++) {
+                    const start = segment.points[l];
+                    const end = segment.points[l + 1];
+                    const grade = calculateGrade(start, end);
+                    segment.points[l].push(grade);
+                }
+                segment.points[segment.points.length - 1].push(null);
             }
         }
     }
     return newRoutes;
 }
                 
-async function calculateElevationAndGradeBetweenPoints(routes, maxGrade, units) {
+async function calculateElevationAndGradeBetweenPoints(routes) {
     const zoom = 18;
     routes = segmentPolylines(routes);
     routes = getDistanceBetweenAllPoints(routes);
@@ -276,7 +290,8 @@ async function calculateElevationAndGradeBetweenPoints(routes, maxGrade, units) 
         throw error;
     }
 
-    routes = getElevationAndGrade(routes, tileBuffers, zoom);
+    routes = getElevations(routes, tileBuffers, zoom);
+    routes = getGradeBetweenPoints(routes);
     return routes;
 }
 

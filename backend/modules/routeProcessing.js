@@ -6,7 +6,7 @@ const https = require('https');
 const polyline = require('./polyline');
 const queryFormatting = require('./queryFormatting');
 const elevation = require('./elevation');
-const avoidance = require('./avoidance');
+const avoidance = require('./avoidance.js');
 const fs = require('fs');
 
 function decodePolylines(routes) {
@@ -52,7 +52,7 @@ async function getRoute(query) {
     // fs.writeFileSync('routes.json', JSON.stringify(formattedRoutes));
     // const formattedRoutes = JSON.parse(fs.readFileSync('routesPeach.json'));
 
-    let bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, 10);
+    let bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade=10);
     while (bboxes.length > 0) {
         url = queryFormatting.formatAvoidance(url, bboxes);
         routes = await callHERE(url);
