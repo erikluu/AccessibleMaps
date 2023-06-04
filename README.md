@@ -12,7 +12,7 @@ The application provides accessible routes for various modes of transportation s
 
 ## For Development
 * npm run frontend
-* npm run backend
+* npm run backend OR cd backend && npm run start:inspect
 * [Internal Documentation](https://erikluu.notion.site/Backend-Reference-cf7a4b5bf4e74df686fd18d05d67d10c)
 
 ## More Details
