@@ -2,7 +2,7 @@
 
 AccessibleMaps is a web-based application that provides accessible routes for individuals with disabilities.
 
-The application provides accessible routes for various modes of transportation such as driving, biking, transit, walking, and now an option for ADA users.
+The application focuses on providing safe and accessible routes for ADA users.
 
 ## Features (planned)
 * Accessible routes for ADA users
@@ -18,3 +18,5 @@ The application provides accessible routes for various modes of transportation s
 ## More Details
 Cal Poly 2023 Senior Project   
 Erik Luu, Carlo Ruggiero
+Advisor: Kelly Bodwin
+
