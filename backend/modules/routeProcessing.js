@@ -42,9 +42,10 @@ function callHERE(url) {
 
 async function getRoute(query) {
     const units = query['units'];
-    const maxGrade = query['maxGrade'];
-    let url = queryFormatting.formatInitialURL(query);
+    // const maxGrade = query['maxGrade'];
+    const maxGrade = 10; // for testing
 
+    let url = queryFormatting.formatInitialURL(query);
     let routes = await callHERE(url);
     let formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, units);
     
@@ -52,11 +53,11 @@ async function getRoute(query) {
     // fs.writeFileSync('routes.json', JSON.stringify(formattedRoutes));
     // const formattedRoutes = JSON.parse(fs.readFileSync('routesPeach.json'));
 
-    let bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade=10);
+    let bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade);
     while (bboxes.length > 0) {
         url = queryFormatting.formatAvoidance(url, bboxes);
         routes = await callHERE(url);
-        formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, units);
+        formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, maxGrade);
         bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade);
     }
 

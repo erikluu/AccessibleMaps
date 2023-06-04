@@ -44,7 +44,7 @@ function getDistance(firstPoint, secondPoint) {
             Math.sin(Δλ/2) * Math.sin(Δλ/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
-    return R * c; // in meters (it's half idk why, code on website got different results) maybe I don't need to do this idk I'll figure it out later
+    return R * c; // in meters
 }
 
 function interpolatePointsAlongPolyline(start, end, interval) {
@@ -83,7 +83,8 @@ function segmentPolylines(routes) {
                     end: end,
                     points: interpolatePointsAlongPolyline(start, end, 4),
                     totalDistance: 0,
-                    tiles: []
+                    tiles: [],
+                    isPassable: true
                 }
                 formattedSection.segments.push(segment);
             }
@@ -161,7 +162,7 @@ function getElevationTiles(routes, zoom) {
         const route = newRoutes[i];
         for (let j = 0; j < route.sections.length; j++) {
             const section = route.sections[j];
-            for (let k = 0; k < section.segments.length; k++) { // what if this spans >2 tiles? not just start and ending points?
+            for (let k = 0; k < section.segments.length; k++) {
                 const segment = section.segments[k];
                 let tiles = [];
                 for (let l = 0; l < segment.points.length; l++) {
@@ -251,7 +252,7 @@ function calculateGrade(start, end) {
     return grade;
 }
 
-function getGradeBetweenPoints(routes) {
+function getGradeBetweenPoints(routes, maxGrade) {
     let newRoutes = JSON.parse(JSON.stringify(routes));
     for (let i = 0; i < newRoutes.length; i++) {
         const route = newRoutes[i];
@@ -264,6 +265,9 @@ function getGradeBetweenPoints(routes) {
                     const end = segment.points[l + 1];
                     const grade = calculateGrade(start, end);
                     segment.points[l].push(grade);
+                    if (segment.isPassable && grade >= maxGrade) {
+                        segment.isPassable = false;
+                    }
                 }
                 segment.points[segment.points.length - 1].push(null);
             }
@@ -272,8 +276,8 @@ function getGradeBetweenPoints(routes) {
     return newRoutes;
 }
                 
-async function calculateElevationAndGradeBetweenPoints(routes) {
-    const zoom = 18;
+async function calculateElevationAndGradeBetweenPoints(routes, maxGrade) {
+    const zoom = 18; // 14 or 15 zoom with DEM or RGB tiles gets weird reults. Bad file signatures... not png or json or anything on wikipedia https://en.wikipedia.org/wiki/List_of_file_signatures
     routes = segmentPolylines(routes);
     routes = getDistanceBetweenAllPoints(routes);
     routes = getElevationTiles(routes, zoom);
@@ -291,7 +295,7 @@ async function calculateElevationAndGradeBetweenPoints(routes) {
     }
 
     routes = getElevations(routes, tileBuffers, zoom);
-    routes = getGradeBetweenPoints(routes);
+    routes = getGradeBetweenPoints(routes, maxGrade);
     return routes;
 }
 
