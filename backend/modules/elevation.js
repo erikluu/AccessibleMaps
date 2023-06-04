@@ -232,7 +232,7 @@ function getGrade(start, end) {
     return grade;
 }
 
-function getElevationAndGrade(routes, tileBuffers, zoom, maxGrade) {
+function getElevationAndGrade(routes, tileBuffers, zoom) {
     let newRoutes = JSON.parse(JSON.stringify(routes));
     for (let i = 0; i < newRoutes.length; i++) {
         const route = newRoutes[i];
@@ -252,9 +252,6 @@ function getElevationAndGrade(routes, tileBuffers, zoom, maxGrade) {
                     segment.end.push(startElevation);
                 }
                 segment.grade = getGrade(segment.start, segment.end);
-                if (segment.grade > maxGrade) {
-                    segment.isSteep = true;
-                }
             }
         }
     }
@@ -279,7 +276,7 @@ async function calculateElevationAndGradeBetweenPoints(routes, maxGrade, units) 
         throw error;
     }
 
-    routes = getElevationAndGrade(routes, tileBuffers, zoom, maxGrade);
+    routes = getElevationAndGrade(routes, tileBuffers, zoom);
     return routes;
 }
 

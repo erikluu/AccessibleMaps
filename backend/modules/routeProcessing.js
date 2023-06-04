@@ -7,6 +7,7 @@ const polyline = require('./polyline');
 const queryFormatting = require('./queryFormatting');
 const elevation = require('./elevation');
 const avoidance = require('./avoidance');
+const fs = require('fs');
 
 function decodePolylines(routes) {
     routes.forEach((route) => {
@@ -42,14 +43,24 @@ function callHERE(url) {
 async function getRoute(query) {
     const units = query['units'];
     const maxGrade = query['maxGrade'];
-    const url = queryFormatting.formatInitialURL(query);
+    let url = queryFormatting.formatInitialURL(query);
 
-    const routeObject = await callHERE(url);
-    const formattedRouteObject = await elevation.calculateElevationAndGradeBetweenPoints(routeObject, maxGrade, units);
-    const bboxes = await avoidance.createBoundingBoxForSteepGrades(routeObject);
-
+    let routes = await callHERE(url);
+    let formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, units);
     
-    return "lmao";
+    // for testing
+    // fs.writeFileSync('routes.json', JSON.stringify(formattedRoutes));
+    // const formattedRoutes = JSON.parse(fs.readFileSync('routesPeach.json'));
+
+    let bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, 10);
+    while (bboxes.length > 0) {
+        url = queryFormatting.formatAvoidance(url, bboxes);
+        routes = await callHERE(url);
+        formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, units);
+        bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade);
+    }
+
+    return formattedRoutes;
 }
 
 module.exports = {
