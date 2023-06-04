@@ -44,53 +44,80 @@ function getDistance(firstPoint, secondPoint) {
             Math.sin(Δλ/2) * Math.sin(Δλ/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
-    return R * c; // in meters (it's half idk why, code on website got different results) maybe I don't need to do this idk I'll figure it out later
+    return R * c; // in meters
 }
 
 function interpolatePointsAlongPolyline(start, end, interval) {
     const distance = getDistance(start, end);
     const numPoints = Math.ceil(distance / interval); // get a point every 4 meters
 
-    const segment = []
+    const points = []
     for (let i = 0; i < numPoints; i++) {
         const fraction = i / numPoints;
         const lat = start[0] + fraction * (end[0] - start[0]);
         const lng = start[1] + fraction * (end[1] - start[1]);
-        segment.push([lat, lng]);
+        points.push([lat, lng]);
     }
-    return segment;
+    return points;
 }
 
 function segmentPolylines(routes) {
-    routes.forEach((route) => {
-        let fullLine = [];
-        route.sections.forEach((section) => {
+    let newRouteObject = [];
+    for (let i = 0; i < routes.length; i++) {
+        const route = routes[i];
+        let formattedRoute = {sections: []};
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            let formattedSection = {
+                arrival: section.arrival,
+                departure: section.departure,
+                summary: section.summary,
+                segments: []
+            };
             const polyline = section.polyline.polyline;
             for (let i = 0; i < polyline.length - 1; i++) {
                 const start = polyline[i];
                 const end = polyline[i + 1];
-                const segment = interpolatePointsAlongPolyline(start, end, 4);
-                fullLine = fullLine.concat(segment);
+                const segment = {
+                    start: start,
+                    end: end,
+                    points: interpolatePointsAlongPolyline(start, end, 4),
+                    totalDistance: 0,
+                    tiles: [],
+                    isPassable: true
+                }
+                formattedSection.segments.push(segment);
             }
-        });
-        route["fullLine"] = fullLine;
-    });
+            formattedRoute.sections.push(formattedSection);
+        };
+        newRouteObject.push(formattedRoute);
+    };
 
-    return routes;
+    return newRouteObject;
 }
 
 function getDistanceBetweenAllPoints(routes) {
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length - 1; i++) {
-            const start = fullLine[i];
-            const end = fullLine[i + 1];
-            const distance = getDistance(start, end);
-            start[2] = distance;
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                let totalDistance = 0;
+                for (let l = 0; l < segment.points.length - 1; l++) {
+                    const start = segment.points[l];
+                    const end = segment.points[l + 1];
+                    const distance = getDistance(start, end);
+                    start[2] = distance;
+                    totalDistance += distance;
+                }
+                segment.points[segment.points.length - 1][2] = 0;
+                segment.totalDistance = totalDistance;
+            }
         }
-    });
-
-    return routes;
+    }
+    return newRoutes;
 }
 
 function coordinateToTile(latitude, longitude, zoom) {
@@ -105,6 +132,7 @@ function coordinateToTile(latitude, longitude, zoom) {
 function requestElevationTile(tileX, tileY, zoom) {
     try {
         const endpoint = `https://api.mapbox.com/v4/mapbox.terrain-rgb/${zoom}/${tileX}/${tileY}.pngraw?access_token=${process.env.MAPBOXGL_API_KEY}`;
+        console.log(endpoint);
         return new Promise((resolve, reject) => {
             get(endpoint, (response) => {
                 let data;
@@ -129,35 +157,47 @@ function requestElevationTile(tileX, tileY, zoom) {
 }
 
 function getElevationTiles(routes, zoom) {
-    let tileByCoordinate = {};
-    let uniqueTilesHash = [];
-    let uniqueTiles = [];
-    let tilePromises = {};
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length; i++) {
-            const coordinate = fullLine[i];
-            const [tileX, tileY] = coordinateToTile(coordinate[0], coordinate[1], zoom);
-
-            const coordinateHash = hashCode(`${coordinate[0]},${coordinate[1]}`);
-            const tileHash = hashCode(`${tileX},${tileY}`);
-            tileByCoordinate[coordinateHash] = tileHash;
-            
-            if (!uniqueTilesHash.includes(tileHash)) {
-                uniqueTilesHash.push(tileHash);
-                uniqueTiles.push([tileX, tileY]);
-            }   
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                let tiles = [];
+                for (let l = 0; l < segment.points.length; l++) {
+                    const point = segment.points[l];
+                    const tile = coordinateToTile(point[0], point[1], zoom);
+                    if (!tiles.includes(tile)) {
+                        tiles.push(tile);
+                    }
+                }
+                segment.tiles = tiles;
+            }
         }
-    });
+    }
+    return newRoutes;
+}
 
-    uniqueTiles.forEach((tile) => {
-        const tileX = tile[0];
-        const tileY = tile[1];
-        const tileHash = hashCode(`${tileX},${tileY}`);
-        tilePromises[tileHash] = requestElevationTile(tileX, tileY, zoom);
-    });
-
-    return [tilePromises, tileByCoordinate];
+function getTilePromises(routes, zoom) {
+    const tilePromises = {};
+    for (let i = 0; i < routes.length; i++) {
+        const route = routes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                const tiles = segment.tiles;
+                for (let l = 0; l < tiles.length; l++) {
+                    const tile = tiles[l];
+                    if (!Object.keys(tilePromises).includes(`${tile[0]},${tile[1]}`)) {
+                        tilePromises[`${tile[0]},${tile[1]}`] = requestElevationTile(tile[0], tile[1], zoom);
+                    }
+                }
+            }
+        }
+    }
+    return tilePromises;
 }
 
 async function resolveObjectPromises(obj) {
@@ -169,12 +209,15 @@ async function resolveObjectPromises(obj) {
     return obj;
   }
 
-function getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom) {
+function getPixelValue(tileBuffers, point, zoom) {
+    const [tileX, tileY] = coordinateToTile(point[0], point[1], zoom);
+    const tileBuffer = tileBuffers[`${tileX},${tileY}`]; // finds a buffer that doesn't exist in tileBuffers... why?
+
     const png = PNG.sync.read(tileBuffer);
     const pixels = png.data;
 
-    const pixelX = mercator.px([coordinate[1], coordinate[0]], zoom)[0] - tileX * 256;
-    const pixelY = mercator.px([coordinate[1], coordinate[0]], zoom)[1] - tileY * 256;
+    const pixelX = mercator.px([point[1], point[0]], zoom)[0] - tileX * 256;
+    const pixelY = mercator.px([point[1], point[0]], zoom)[1] - tileY * 256;
     const pixelIndex = (256 * pixelY + pixelX) * 4;
     const r = pixels[pixelIndex];
     const g = pixels[pixelIndex + 1];
@@ -183,25 +226,64 @@ function getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom) {
     return elevation;
 }
 
-function getElevationValue(tileBuffer, coordinate, zoom) {
-    const [tileX, tileY] = coordinateToTile(coordinate[0], coordinate[1], zoom);
-    const elevation = getElevationFromTile(tileBuffer, tileX, tileY, coordinate, zoom);
-    return elevation;
+function getElevations(routes, tileBuffers, zoom) {
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                for (let l = 0; l < segment.points.length; l++) {
+                    const point = segment.points[l];
+                    const elevation = getPixelValue(tileBuffers, point, zoom);
+                    point.push(elevation);
+                }
+            }
+        }
+    }
+    return newRoutes;
 }
 
-function getGrade(start, end) {
+function calculateGrade(start, end) {
     const distance = start[2];
     const elevation = end[3] - start[3];
     const grade = elevation / distance * 100;
     return grade;
 }
+
+function getGradeBetweenPoints(routes, maxGrade) {
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                for (let l = 0; l < segment.points.length - 1; l++) {
+                    const start = segment.points[l];
+                    const end = segment.points[l + 1];
+                    const grade = calculateGrade(start, end);
+                    segment.points[l].push(grade);
+                    if (segment.isPassable && grade >= maxGrade) {
+                        segment.isPassable = false;
+                    }
+                }
+                segment.points[segment.points.length - 1].push(null);
+            }
+        }
+    }
+    return newRoutes;
+}
                 
-async function getGrades(routes) {
-    const zoom = 18;
+async function calculateElevationAndGradeBetweenPoints(routes, maxGrade) {
+    const zoom = 18; // 14 or 15 zoom with DEM or RGB tiles gets weird reults. Bad file signatures... not png or json or anything on wikipedia https://en.wikipedia.org/wiki/List_of_file_signatures
     routes = segmentPolylines(routes);
     routes = getDistanceBetweenAllPoints(routes);
-    const [tilePromises, tileByCoordinate] = getElevationTiles(routes, zoom);
-    let tileBuffers = []
+    routes = getElevationTiles(routes, zoom);
+
+    const tilePromises = getTilePromises(routes, zoom);
+    let tileBuffers = {};
 
     try {
         console.log('requesting tiles');
@@ -212,33 +294,11 @@ async function getGrades(routes) {
         throw error;
     }
 
-    // getElevations
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length; i++) {
-            const coordinate = fullLine[i];
-            const coordinateHash = hashCode(`${coordinate[0]},${coordinate[1]}`);
-            const tileHash = tileByCoordinate[coordinateHash];
-            const tile = tileBuffers[tileHash];
-            const elevation = getElevationValue(tile, coordinate, zoom);
-            coordinate[3] = elevation;
-        }
-    });
-
-    // getGrades
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length - 1; i++) {
-            const start = fullLine[i];
-            const end = fullLine[i + 1];
-            const grade = getGrade(start, end);
-            start[4] = grade;
-        }
-    });
-
+    routes = getElevations(routes, tileBuffers, zoom);
+    routes = getGradeBetweenPoints(routes, maxGrade);
     return routes;
 }
 
 module.exports = {
-    getGrades
+    calculateElevationAndGradeBetweenPoints
 }

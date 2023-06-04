@@ -160,6 +160,7 @@ const Sidebar = (props) => {
       console.log("got", query);
 
       const resp = await axios.get(query);
+      console.log("Response: ", resp);
       //console.log(resp.data[0][0].sections);
       const points = resp.data[0][0].sections[0].polyline.polyline;
       //console.log(points);
