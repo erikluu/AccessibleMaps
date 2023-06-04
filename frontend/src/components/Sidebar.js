@@ -17,12 +17,10 @@ import AddIcon from '@mui/icons-material/Add';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import Stack from '@mui/material/Stack'
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import Typography from '@mui/material/Typography';
 import SettingsIcon from '@mui/icons-material/Settings';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import HelpIcon from '@mui/icons-material/Help';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -37,8 +35,17 @@ const Sidebar = (props) => {
 
   const [routeData, setRouteData] = useState(null);
 
+  const [dragging, setDragging] = useState(false);
+
+
   const [newLoc, setNewLoc] = useState();  
-  const [curPosition, setCurPosition] = useState();
+  const [curPosition, setPosition] = useState();
+  const setCurPosition = (i) => {
+    const div = document.getElementById("top-level");
+    div.setAttribute("data-cur", i);
+    setPosition(i);
+  };
+
   const [canRemove, setCanRemove] = useState(INITIAL_REMOVERS);
   const updateCanRemove = (id, val) => {
     canRemove[id] = val;
@@ -63,11 +70,27 @@ const Sidebar = (props) => {
 
   const [coords, setCoords] = useState(INITIAL_COORDS);
   const addCoords = (coord, id) => {
-    const data = {
-      id,
-      loc: coord
-    };
-    setCoords([...coords, data]);
+    let curData = coords;
+    while (curData.length < id) {
+      curData.push(undefined);
+    }
+    if (curData.length == id) {
+      curData.push({
+        id,
+        loc: coord
+      });
+      setCoords(curData);
+    }
+    else {
+      const newData = {
+        id,
+        loc: coord
+      };
+      curData[id] = newData;
+      setCoords(curData);
+    }
+
+    console.log("new path is...", coords);
   };
 
   const [maxSlope, setMaxSlope] = useState(null);
@@ -104,22 +127,30 @@ const Sidebar = (props) => {
     }
   };
 
-  
-
   // updates path list with new coordinates for each searchbar
   const addLoc = (item) => {
-    console.log(item);
+    const div = document.getElementById("top-level");
+    const pos = div.getAttribute("data-cur");
+
     const newCoords = item.geometry.coordinates;
     setNewLoc(newCoords);
     const marker = new map.mapboxgl.Marker({
       draggable: true,
+      occludedOpacity: pos,
     })
     .setLngLat(newCoords)
     .addTo(map.map);
 
+    const onDragEnd = () => {
+      setCurPosition(pos);
+      const lngLat = marker.getLngLat();
+      setNewLoc([lngLat.lng, lngLat.lat]);
+      setDragging(true);
+    };
+    marker.on('dragend', onDragEnd);
+
     return item.place_name;
   };
-
 
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
@@ -166,6 +197,9 @@ const Sidebar = (props) => {
 
           // update most recently used searchbar so that a location can be tied to it
           searchBar.addEventListener("change", (e) => {
+            setCurPosition(e.currentTarget.id);
+          });
+          searchBar.addEventListener("mouseover", (e) => {
             setCurPosition(e.currentTarget.id);
           });
         }
@@ -241,14 +275,22 @@ const Sidebar = (props) => {
     setCanRemove(arr);
   }, [searchBars]);
 
+  useEffect(() => {
+    if (dragging & routeData == null) {
+      setDragging(false);
+    }
+    if (dragging & routeData != null) {
+      setDragging(false);
+      getRoute();
+    }
+  }, [dragging]);
+
   // return empty if the map hasn't initialized, need the map to create geocoders in the search bar
-  // bug: not sure why this is true when the search bar re collapses
   if (!map) {
     return <div></div>;
   }
 
   // init path to have 2 stops to begin
-  // bug: only the second search bar renders when they are added at the same time
   if (searchBars.length === 0) {
     addSearchBar(1);
   }
