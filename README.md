@@ -18,5 +18,5 @@ The application focuses on providing safe and accessible routes for ADA users.
 ## More Details
 Cal Poly 2023 Senior Project   
 Erik Luu, Carlo Ruggiero   
-Advisor: Kelly Bodwin
+Advisor: Dr. Kelly Bodwin
 
