@@ -259,8 +259,6 @@ const MapView = (props) => {
       setLat(map.current.getCenter().lat.toFixed(4));
       setZoom(map.current.getZoom().toFixed(2));
     });
-
-    return Document.getElementBy
   });
 
   // redraw path every time coords are updated
