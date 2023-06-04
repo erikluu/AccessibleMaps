@@ -6,6 +6,7 @@ const https = require('https');
 const polyline = require('./polyline');
 const queryFormatting = require('./queryFormatting');
 const elevation = require('./elevation');
+const avoidance = require('./avoidance');
 
 function decodePolylines(routes) {
     routes.forEach((route) => {
@@ -39,18 +40,16 @@ function callHERE(url) {
 }
 
 async function getRoute(query) {
-    let routeNumber = 0;
-    let routeObject = {};
+    const units = query['units'];
+    const maxGrade = query['maxGrade'];
+    const url = queryFormatting.formatInitialURL(query);
 
-    let units = query['units'];
-    let maxGrade = query['maxGrade'];
-    let url = queryFormatting.formatInitialURL(query);
+    const routeObject = await callHERE(url);
+    const formattedRouteObject = await elevation.calculateElevationAndGradeBetweenPoints(routeObject, maxGrade, units);
+    const bboxes = await avoidance.createBoundingBoxForSteepGrades(routeObject);
 
-    routeObject[0] = await callHERE(url);
-    routeObject[0]["steepSegments"] = await elevation.getGrades(routeObject[0], maxGrade, units);
-    console.log(routeObject);
     
-    return routeObject;
+    return "lmao";
 }
 
 module.exports = {

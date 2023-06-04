@@ -51,46 +51,73 @@ function interpolatePointsAlongPolyline(start, end, interval) {
     const distance = getDistance(start, end);
     const numPoints = Math.ceil(distance / interval); // get a point every 4 meters
 
-    const segment = []
+    const points = []
     for (let i = 0; i < numPoints; i++) {
         const fraction = i / numPoints;
         const lat = start[0] + fraction * (end[0] - start[0]);
         const lng = start[1] + fraction * (end[1] - start[1]);
-        segment.push([lat, lng]);
+        points.push([lat, lng]);
     }
-    return segment;
+    return points;
 }
 
 function segmentPolylines(routes) {
-    routes.forEach((route) => {
-        let fullLine = [];
-        route.sections.forEach((section) => {
+    let newRouteObject = [];
+    for (let i = 0; i < routes.length; i++) {
+        const route = routes[i];
+        let formattedRoute = {sections: []};
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            let formattedSection = {
+                arrival: section.arrival,
+                departure: section.departure,
+                summary: section.summary,
+                segments: []
+            };
             const polyline = section.polyline.polyline;
             for (let i = 0; i < polyline.length - 1; i++) {
                 const start = polyline[i];
                 const end = polyline[i + 1];
-                const segment = interpolatePointsAlongPolyline(start, end, 4);
-                fullLine = fullLine.concat(segment);
+                const segment = {
+                    start: start,
+                    end: end,
+                    points: interpolatePointsAlongPolyline(start, end, 4),
+                    totalDistance: 0,
+                    tiles: [],
+                    isSteep: false,
+                    bbox: null,
+                }
+                formattedSection.segments.push(segment);
             }
-        });
-        route["fullLine"] = fullLine;
-    });
+            formattedRoute.sections.push(formattedSection);
+        };
+        newRouteObject.push(formattedRoute);
+    };
 
-    return routes;
+    return newRouteObject;
 }
 
 function getDistanceBetweenAllPoints(routes) {
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length - 1; i++) {
-            const start = fullLine[i];
-            const end = fullLine[i + 1];
-            const distance = getDistance(start, end);
-            start[2] = distance;
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                let totalDistance = 0;
+                for (let l = 0; l < segment.points.length - 1; l++) {
+                    const start = segment.points[l];
+                    const end = segment.points[l + 1];
+                    const distance = getDistance(start, end);
+                    start[2] = distance;
+                    totalDistance += distance;
+                }
+                segment.totalDistance = totalDistance;
+            }
         }
-    });
-
-    return routes;
+    }
+    return newRoutes;
 }
 
 function coordinateToTile(latitude, longitude, zoom) {
@@ -129,35 +156,44 @@ function requestElevationTile(tileX, tileY, zoom) {
 }
 
 function getElevationTiles(routes, zoom) {
-    let tileByCoordinate = {};
-    let uniqueTilesHash = [];
-    let uniqueTiles = [];
-    let tilePromises = {};
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length; i++) {
-            const coordinate = fullLine[i];
-            const [tileX, tileY] = coordinateToTile(coordinate[0], coordinate[1], zoom);
-
-            const coordinateHash = hashCode(`${coordinate[0]},${coordinate[1]}`);
-            const tileHash = hashCode(`${tileX},${tileY}`);
-            tileByCoordinate[coordinateHash] = tileHash;
-            
-            if (!uniqueTilesHash.includes(tileHash)) {
-                uniqueTilesHash.push(tileHash);
-                uniqueTiles.push([tileX, tileY]);
-            }   
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                const startTile = coordinateToTile(segment.start[0], segment.start[1], zoom);
+                const endTile = coordinateToTile(segment.end[0], segment.end[1], zoom);
+                const tiles = {startTile: startTile, usingSameTile: true};
+                if (JSON.stringify(startTile) != JSON.stringify(endTile)) {
+                    tiles.endTile = endTile;
+                    tiles.usingSameTile = false;
+                }
+                segment.tiles = tiles;
+            }
         }
-    });
+    }
+    return newRoutes;
+}
 
-    uniqueTiles.forEach((tile) => {
-        const tileX = tile[0];
-        const tileY = tile[1];
-        const tileHash = hashCode(`${tileX},${tileY}`);
-        tilePromises[tileHash] = requestElevationTile(tileX, tileY, zoom);
-    });
-
-    return [tilePromises, tileByCoordinate];
+function getTilePromises(routes, zoom) {
+    const tilePromises = {};
+    for (let i = 0; i < routes.length; i++) {
+        const route = routes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                const tiles = segment.tiles;
+                tilePromises[`${tiles.startTile[0]},${tiles.startTile[1]}`] = requestElevationTile(tiles.startTile[0], tiles.startTile[1], zoom);
+                if (!tiles.usingSameTile) {
+                    tilePromises[`${tiles.endTile[0]},${tiles.endTile[1]}`] = requestElevationTile(tiles.endTile[0], tiles.endTile[1], zoom);
+                }
+            }
+        }
+    }
+    return tilePromises;
 }
 
 async function resolveObjectPromises(obj) {
@@ -195,13 +231,44 @@ function getGrade(start, end) {
     const grade = elevation / distance * 100;
     return grade;
 }
+
+function getElevationAndGrade(routes, tileBuffers, zoom, maxGrade) {
+    let newRoutes = JSON.parse(JSON.stringify(routes));
+    for (let i = 0; i < newRoutes.length; i++) {
+        const route = newRoutes[i];
+        for (let j = 0; j < route.sections.length; j++) {
+            const section = route.sections[j];
+            for (let k = 0; k < section.segments.length; k++) {
+                const segment = section.segments[k];
+                const tiles = segment.tiles;
+                const startTileBuffer = tileBuffers[`${tiles.startTile[0]},${tiles.startTile[1]}`];
+                const startElevation = getElevationValue(startTileBuffer, segment.start, zoom);
+                segment.start.push(startElevation);
+                if (!tiles.usingSameTile) {
+                    const endTileBuffer = tileBuffers[`${tiles.endTile[0]},${tiles.endTile[1]}`];
+                    const endElevation = getElevationValue(endTileBuffer, segment.end, zoom);
+                    segment.end.push(endElevation);
+                } else {
+                    segment.end.push(startElevation);
+                }
+                segment.grade = getGrade(segment.start, segment.end);
+                if (segment.grade > maxGrade) {
+                    segment.isSteep = true;
+                }
+            }
+        }
+    }
+    return newRoutes;
+}
                 
-async function getGrades(routes) {
+async function calculateElevationAndGradeBetweenPoints(routes, maxGrade, units) {
     const zoom = 18;
     routes = segmentPolylines(routes);
     routes = getDistanceBetweenAllPoints(routes);
-    const [tilePromises, tileByCoordinate] = getElevationTiles(routes, zoom);
-    let tileBuffers = []
+    routes = getElevationTiles(routes, zoom);
+
+    const tilePromises = getTilePromises(routes, zoom);
+    let tileBuffers = {};
 
     try {
         console.log('requesting tiles');
@@ -212,33 +279,10 @@ async function getGrades(routes) {
         throw error;
     }
 
-    // getElevations
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length; i++) {
-            const coordinate = fullLine[i];
-            const coordinateHash = hashCode(`${coordinate[0]},${coordinate[1]}`);
-            const tileHash = tileByCoordinate[coordinateHash];
-            const tile = tileBuffers[tileHash];
-            const elevation = getElevationValue(tile, coordinate, zoom);
-            coordinate[3] = elevation;
-        }
-    });
-
-    // getGrades
-    routes.forEach((route) => {
-        const fullLine = route.fullLine;
-        for (let i = 0; i < fullLine.length - 1; i++) {
-            const start = fullLine[i];
-            const end = fullLine[i + 1];
-            const grade = getGrade(start, end);
-            start[4] = grade;
-        }
-    });
-
+    routes = getElevationAndGrade(routes, tileBuffers, zoom, maxGrade);
     return routes;
 }
 
 module.exports = {
-    getGrades
+    calculateElevationAndGradeBetweenPoints
 }
