@@ -54,13 +54,13 @@ const Sidebar = (props) => {
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
   const addSearchBar = (id) => {
     let newID = id;
-    let meta = 'init';
+    let meta = "init";
     if (newID === 0) {
       newID = searchBars[searchBars.length - 1].id + 1;
-      meta = 'additional';
+      meta = "additional";
     }
     const data = {
-      loc: '',
+      loc: "",
       id: newID,
       meta
     };

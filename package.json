@@ -1,14 +1,20 @@
 {
   "name": "accessiblemaps",
   "version": "0.1.0",
+  "homepage": "https://erikluu.github.io/accessiblemaps",
   "private": true,
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "frontend": "cd frontend && npm start",
-    "backend": "cd backend && nodemon app.js"
+    "backend": "cd backend && nodemon app.js",
+    "build": "react-scripts build"
   },
   "devDependencies": {
     "dotenv": "^16.0.3"
   },
   "dependencies": {
+    "gh-pages": "^5.0.0",
+    "react-scripts": "^5.0.1"
   }
 }
