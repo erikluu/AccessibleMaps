@@ -2,16 +2,18 @@ const formatBox = (box) => {
     const start = box[0];
     const end = box[1];
     const topLeft = {
-        lat: Math.max(start[0], end[0]),
-        lng: Math.min(start[1], end[1])
+        lat: Math.max(start.lat, end.lat),
+        lng: Math.min(start.lng, end.lng)
     };
 
     const bottomRight = {
-        lat: Math.min(start[0], end[0]),
-        lng: Math.max(start[1], end[1])
+        lat: Math.min(start.lat, end.lat),
+        lng: Math.max(start.lng, end.lng)
     };
  
     return JSON.stringify({ bottomRight, topLeft });
+    
+    // return `[[${box[0].lat},${box[0].lng}],[${box[1].lat},${box[1].lng}]]`;
 };
 
 
