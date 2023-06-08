@@ -19,6 +19,8 @@
     "get-pixels": "^3.3.3",
     "https": "^1.0.0",
     "ndarray": "^1.0.19",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "request": "^2.88.2",
+    "requests": "^0.3.0"
   }
 }

@@ -76,12 +76,29 @@ function formatInitialURL(query) {
     };
 
     delete query['maxGrade'];
+    
+    // get all bboxes, formatted like bbox0, bbox1
+    // let bboxes = [];
+    // Object.keys(query).forEach((key) => {
+    //     if (/^bbox\d+$/.test(key)) {
+    //         bboxes.push(JSON.parse(query[key]));
+    //     }
+    // });
+
+    // // remove all bboxes from query
+    // bboxes.forEach((bbox) => {
+    //     delete query[`bbox${bboxes.indexOf(bbox)}`];
+    // });
 
     const waypoints = formatWaypoints(query);
     const rest = formatRest(defaultQuery, query);
 
-    const url = `${BASE_URL}?${waypoints}${rest}&apiKey=${process.env.HERE_API_KEY}`;
+    let url = `${BASE_URL}?${waypoints}${rest}&apiKey=${process.env.HERE_API_KEY}`;
     
+    // bboxes.forEach((bbox) => {
+    //     url = formatAvoidance(url, [bbox]);
+    // });
+
     return url;
 }
 

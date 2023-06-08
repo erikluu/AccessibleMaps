@@ -1,5 +1,17 @@
 const formatBox = (box) => {
-    return `[[[${box[0].lat},${box[0].lng}],[${box[1].lat},${box[1].lng}]]]`;
+    const start = box[0];
+    const end = box[1];
+    const topLeft = {
+        lat: Math.max(start[0], end[0]),
+        lng: Math.min(start[1], end[1])
+    };
+
+    const bottomRight = {
+        lat: Math.min(start[0], end[0]),
+        lng: Math.max(start[1], end[1])
+    };
+ 
+    return JSON.stringify({ bottomRight, topLeft });
 };
 
 
@@ -27,7 +39,7 @@ const createQuery = (path, slope, box) => {
 
     let query = base + parameters;
     if (box != null) {
-        query += "&bbox=" + formatBox(box);
+        query += "&bbox0=" + formatBox(box);
     }
 
     return query;

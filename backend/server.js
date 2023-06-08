@@ -24,6 +24,7 @@ app.get('/api/route',[
   check('return').optional().isIn(['elevation', 'polyline', 'summary']),
   check('spans').optional().isIn(['length', 'duration', 'routeNumbers', 'walkAttributes', 'streetAttributes', 'trafficAttributes', 'routeNumbers', 'segmentId', 'segmentRef']),
   check('units').optional().isIn(['metric', 'imperial']),
+  check('bbox').optional(),
   check('wp').custom((_value, { req }) => {
     // filter out all query parameters that are not waypoints
     const waypoints = Object.keys(req.query).filter((key) => /^wp\d+$/.test(key));
@@ -46,7 +47,7 @@ app.get('/api/route',[
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
-
+  console.log(req.query)
   const route = await routeProcessing.getRoute(req.query);
   if (route === 'HERE API error') {
     res.status(500).send('HERE API error');

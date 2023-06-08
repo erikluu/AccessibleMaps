@@ -3,6 +3,7 @@
     and filtering it by grade of road
 */
 const https = require('https');
+const request = require('request');
 const polyline = require('./polyline');
 const queryFormatting = require('./queryFormatting');
 const elevation = require('./elevation');
@@ -20,6 +21,7 @@ function decodePolylines(routes) {
 
 function callHERE(url) {
     return new Promise((resolve, reject) => {
+        
         https.get(url, (response) => {
             let data;
             
@@ -27,7 +29,8 @@ function callHERE(url) {
                 data = chunk;
             });
 
-            response.on('end', () => {
+            response.on('end', () => {  // get request not big enough, should be post to fix:<head><title>414 Request-URI Too Large</title></head>
+                console.log(data);
                 const result = JSON.parse(data);
                 const routes = decodePolylines(result.routes);
                 resolve(routes);
@@ -42,14 +45,14 @@ function callHERE(url) {
 
 async function getRoute(query) {
     const units = query['units'];
-    // const maxGrade = query['maxGrade'];
-    const maxGrade = 10; // for testing
+    const maxGrade = parseInt(query['maxGrade']);
 
     let url = queryFormatting.formatInitialURL(query);
     let routes = await callHERE(url);
     let formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, units);
     
     // for testing
+    // const maxGrade = 10;
     // fs.writeFileSync('routes.json', JSON.stringify(formattedRoutes));
     // const formattedRoutes = JSON.parse(fs.readFileSync('routesPeach.json'));
 

@@ -21,8 +21,16 @@ function createBoundingBoxForSteepGrades(routes, maxGrade) {
             const section = route.sections[j];
             for (let k = 0; k < section.segments.length; k++) {
                 const segment = section.segments[k];
-                if (segment.grade >= maxGrade) {
-                    bboxes.push(formatBBox(segment.start, segment.end));
+                for (let l = 0; l < segment.points.length - 1; l++) {
+                    const point = segment.points[l];
+                    if (point[4] === null || !segment.isPassable) continue; 
+                    else if (point[4] > maxGrade) {
+                        segment.isPassable = false;
+                    }
+                }
+                if (!segment.isPassable) {
+                    const bbox = formatBBox(segment.start, segment.end);
+                    bboxes.push(bbox);
                 }
             }
         }
