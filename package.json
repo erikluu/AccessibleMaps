@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predeploy": "cd frontend && npm run build",
+    "deploy": "gh-pages -d build",
     "frontend": "cd frontend && npm start",
-    "backend": "cd backend && nodemon app.js"
+    "backend": "cd backend && nodemon app.js",
+    "build": "react-scripts build"
   },
   "devDependencies": {
     "dotenv": "^16.0.3"
