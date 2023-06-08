@@ -13,7 +13,6 @@ const defLAT = 35.2628;
 const defZoom = 9.00;
 
 const SIDEBAR_WIDTH_PADDING = { left: 325 };
-const INITIAL_BBOX = [0, 0];
 const INITIAL_ROUTE = {
   "type": "FeatureCollection",
   "features": [{
@@ -35,15 +34,14 @@ const MapView = (props) => {
   const [zoom, setZoom] = useState(defZoom);
 
   const currentPath = props.stops;
-  const {sidebarState, setSidebarState, bboxAllowed, setBbox} = props;
+  const {sidebarState, setSidebarState, setBox} = props;
 
-  const [bboxPoints, setBboxPoints] = useState(null);
-  const updateBboxPoints = (p) => {
-    console.log("updating box");
-    setBboxPoints("nice");
+  const [topLeftP, setTopLeftP] = useState(null);
+  const [bottomRightP, setBottomRightP] = useState(null);
 
-    console.log("is now", bboxPoints);
-
+  const allowBox = () => {
+    const div = document.getElementById("top-level");
+    return div.getAttribute("data-box") != 0;
   };
 
   let start, box, current;
@@ -59,7 +57,8 @@ const MapView = (props) => {
 
   const mouseDown = (e) => {
     // Continue the rest of the function if bbox is allowed
-    if (!(e.shiftKey && e.button === 0)) return;
+    //if (!(e.shiftKey && e.button === 0)) return;
+    if (!allowBox()) return;
      
     // Disable default drag zooming when the shift key is held down.
     map.current.dragPan.disable();
@@ -102,9 +101,6 @@ const MapView = (props) => {
   };
      
   const onMouseUp = (e) => {
-    // Capture xy coordinates
-    //finish([start, mousePos(e)]);
-    //console.log("second point", e.lngLat.wrap());
     finish();
   };
      
@@ -120,8 +116,7 @@ const MapView = (props) => {
     document.removeEventListener("mouseup", onMouseUp);
 
     //map.current.dragPan.enable();
-
-    updateBboxPoints(69);
+    document.getElementById("top-level").setAttribute("data-box", 0);
   };
 
   // route render function
@@ -191,7 +186,6 @@ const MapView = (props) => {
         }
       });
 
-
       // tracks a point along the current route
       map.current.addLayer({
         'id': 'point',
@@ -211,14 +205,15 @@ const MapView = (props) => {
     });
 
     map.current.on("mousedown", (e) => {
-      console.log('p1:', e.lngLat.wrap());
-      //setBboxPoints([e.lngLat.wrap(), bboxPoints[1]]);
+      //console.log('p1:', e.lngLat.wrap());
+      if (!allowBox()) return;
+      setTopLeftP(e.lngLat.wrap());
     });
 
     map.current.on("mouseup", (e) => {
-      console.log('p2:', e.lngLat.wrap());
-      //setBboxPoints([bboxPoints[0], e.lngLat.wrap()]);
-      updateBboxPoints();
+      //console.log('p2:', e.lngLat.wrap());
+      if (!allowBox()) return;
+      setBottomRightP(e.lngLat.wrap());
     });
 
     // add search bar
@@ -259,8 +254,6 @@ const MapView = (props) => {
       setLat(map.current.getCenter().lat.toFixed(4));
       setZoom(map.current.getZoom().toFixed(2));
     });
-
-    return Document.getElementBy
   });
 
   // redraw path every time coords are updated
@@ -285,6 +278,12 @@ const MapView = (props) => {
       });
     }
   }, [sidebarState]);
+
+  useEffect(() => {
+    if (!allowBox()) return;
+    console.log("box is now", topLeftP, bottomRightP);
+    setBox([topLeftP, bottomRightP])
+  }, [bottomRightP]);
 
   return (
     <div>

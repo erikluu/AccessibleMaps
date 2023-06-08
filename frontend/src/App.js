@@ -1,7 +1,6 @@
 import "./App.css";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 // eslint-disable-next-line import/no-webpack-loader-syntax
-import axios from 'axios';
 import Sidebar from "./components/Sidebar";
 import MapView from "./components/MapView";
 
@@ -24,31 +23,29 @@ const App = () => {
   };
 
   const [sidebarState, setSidebarState] = useState(true);
-  const [bboxAllowed, setBboxAllowed] = useState(false);
-  const updateBbox = (prev) => {
-    setBboxAllowed(!prev);
-  };
 
-  const [bbox, setBbox] = useState(INITIAL_BBOX);
+  const [box, setBox] = useState(null);
+  const updateBox = (p1, p2) => {
+    setBox([p1, p2]);
+  };
  
   return (
-    <div className="top-level" >
+    <div className="top-level" id="top-level" data-cur={-1} data-box={0} >
       <Sidebar 
         map={map} 
         updateStops={updateStops} 
         stops={stops} 
         sidebarState={sidebarState} 
-        setSidebarState={setSidebarState} 
-        bboxAllowed={bboxAllowed} 
-        setBboxAllowed={updateBbox} 
+        setSidebarState={setSidebarState}
+        box={box}
+        setBox={setBox}
       />
       <MapView 
         updateMap={updateMap} 
         stops={stops} 
         setSidebarState={setSidebarState}
         sidebarState={sidebarState}
-        bboxAllowed={bboxAllowed}
-        setBbox={setBbox}
+        setBox={setBox}
       />
     </div>
   );
