@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import Sidebar from "./components/Sidebar";
 import MapView from "./components/MapView";
-import Icon from "./components/Icon";
 
 <link
   rel="stylesheet"
