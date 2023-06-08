@@ -48,13 +48,18 @@ app.get('/api/route',[
   const errors = validationResult(req);
   if (!errors.isEmpty()) { return res.status(400).json({ errors: errors.array() }); }
   console.log(req.query)
-  const route = await routeProcessing.getRoute(req.query);
-  if (route === 'HERE API error') {
-    res.status(500).send('HERE API error');
-  } else {
-    res.status(200).json(route);
-  }
 
+  try {
+    const route = await routeProcessing.getRoute(req.query);
+    if (route === 'HERE API error') {
+      res.status(500).send('HERE API error');
+    } else {
+      res.status(200).json(route);
+    }
+  } catch(err) {
+    console.log("server error", err);
+    res.status(500).send("backend error");
+  }
 });
 
 app.listen(port, () => {

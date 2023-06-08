@@ -236,7 +236,15 @@ function getElevations(routes, tileBuffers, zoom) {
                 const segment = section.segments[k];
                 for (let l = 0; l < segment.points.length; l++) {
                     const point = segment.points[l];
-                    const elevation = getPixelValue(tileBuffers, point, zoom);
+                    let elevation;
+                    try {
+                        elevation = getPixelValue(tileBuffers, point, zoom);
+                    } catch(err) {
+                        if (l != 0)
+                            elevation = segment.points[l-1][2];
+                        else
+                            elevation = 0;
+                    }
                     point.push(elevation);
                 }
             }

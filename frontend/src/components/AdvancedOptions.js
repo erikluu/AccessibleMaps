@@ -65,7 +65,7 @@ const AdvancedOptions = (props) => {
       >
         <Slider
           min={0}
-          max={15}
+          max={20}
           default={DEFAULT_ADA_SLOPE}
           valueLabelDisplay="auto"
           value={slope}
