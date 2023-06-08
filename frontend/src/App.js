@@ -38,14 +38,14 @@ const App = () => {
         sidebarState={sidebarState} 
         setSidebarState={setSidebarState}
         box={box}
-        setBox={updateBox}
+        setBox={setBox}
       />
       <MapView 
         updateMap={updateMap} 
         stops={stops} 
         setSidebarState={setSidebarState}
         sidebarState={sidebarState}
-        setBox={updateBox}
+        setBox={setBox}
       />
     </div>
   );

@@ -164,6 +164,21 @@ const Sidebar = (props) => {
       map.map.touchZoomRotate.enable();
     }
   };
+
+  const extractPoints = (sections) => {
+    let allPoints = [];
+
+    for (const section of sections) {
+      console.log(section);
+      for (const segment of section.segments) {
+        for (const point of segment.points) {
+          allPoints.push([point[0], point[1], point[3]]);
+        }
+      }
+    }
+
+    return allPoints;
+  };
   
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
@@ -174,17 +189,9 @@ const Sidebar = (props) => {
       console.log("got", query);
 
       const resp = await axios.get(query);
-      console.log("Response: ", resp);
-      //console.log(resp.data[0][0].sections);
-      const points = resp.data[0][0].sections[0].polyline.polyline;
-      //console.log(points);
-      let elevations = [];
-      for (let i = 0; i < points.length; i++) {
-        elevations.push({
-          distance: i,
-          elevation: points[i][2]
-        });
-      }
+      console.log(resp.data[0].sections);
+      const points = extractPoints(resp.data[0].sections);
+
       setRouteData(points);
       updateStops(points);      
     }
