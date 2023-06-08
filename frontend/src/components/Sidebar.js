@@ -60,6 +60,7 @@ const Sidebar = (props) => {
   const [dragging, setDragging] = useState(false);
   const [maxSlope, setMaxSlope] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(false);
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setPosition] = useState();
@@ -216,6 +217,13 @@ const Sidebar = (props) => {
         console.log("got", query);
 
         const resp = await axios.get(query);
+
+        // error checking
+
+        if (resp) {
+          setAlert(true);
+        }
+
         console.log(resp.data[0].sections);
         const points = extractPoints(resp.data[0].sections);
 
@@ -224,11 +232,12 @@ const Sidebar = (props) => {
       }
     }
     catch(err) {
-      console.log("request error");
+      console.log("unknown error");
     }
     finally {
       setLoading(false);
     }
+
   };
 
   const updateGeocoders = () => {
@@ -444,24 +453,19 @@ const Sidebar = (props) => {
         <CircularProgress color="inherit" />
       </Backdrop>
       <Dialog
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
+        open={alert}
       >
-        <DialogTitle id="alert-dialog-title">
-          {"Use Google's location service?"}
+        <DialogTitle>
+          {"Error Finding Route"}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Let Google help apps determine location. This means sending anonymous
-            location data to Google, even when no apps are running.
+          <DialogContentText>
+            Uh oh, you are gay ...
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Disagree</Button>
-          <Button onClick={handleClose} autoFocus>
-            Agree
+          <Button onClick={() => setAlert(false)} autoFocus>
+            Close
           </Button>
         </DialogActions>
       </Dialog>
