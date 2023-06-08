@@ -31,9 +31,14 @@ function callHERE(url) {
 
             response.on('end', () => {  // get request not big enough, should be post to fix:<head><title>414 Request-URI Too Large</title></head>
                 console.log(data);
-                const result = JSON.parse(data);
-                const routes = decodePolylines(result.routes);
-                resolve(routes);
+                try {
+                    const result = JSON.parse(data);
+                    const routes = decodePolylines(result.routes);
+                    resolve(routes);
+                }
+                catch (err) {
+                    reject('HERE API error, URI too long. Try increasing the number of waypoints or increase max grade.');
+                }
             });
 
         }).on('error', (err) => {
@@ -59,7 +64,11 @@ async function getRoute(query) {
     let bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade);
     while (bboxes.length > 0) {
         url = queryFormatting.formatAvoidance(url, bboxes);
-        routes = await callHERE(url);
+        try {
+            routes = await callHERE(url);
+        } catch (err) {
+            return err;
+        }
         formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, maxGrade);
         bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade);
     }
