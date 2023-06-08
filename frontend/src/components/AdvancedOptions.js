@@ -12,7 +12,7 @@ import Divider from '@mui/material/Divider';
 const DEFAULT_ADA_SLOPE = 8;
 
 const AdvancedOptions = (props) => {
-  const {map, setMaxSlope} = props;
+  const {map, setMaxSlope, setBox} = props;
 
   const [slope, setSlope] = useState(0); 
   const handleSliderChange = (event, newValue) => {
@@ -23,7 +23,14 @@ const AdvancedOptions = (props) => {
     setMaxSlope(slope);
   }, [slope]);
 
-  const clearTheBox = () => {
+  const allowBox = () => {
+    if (document.getElementById("bbox") != null) return;
+    document.getElementById("top-level").setAttribute("data-box", 1);
+  };
+
+  const clearBox = () => {
+    document.getElementById("top-level").setAttribute("data-box", 0);
+    setBox(null);
     const box = document.getElementById("bbox");
     if (box) {
       box.parentNode.removeChild(box);
@@ -99,7 +106,7 @@ const AdvancedOptions = (props) => {
       >
         <Button
           sx={{ mt: 2, color: "gray", borderColor: "gray",  }} 
-          //onClick={() => setBboxAllowed(bboxAllowed)}
+          onClick={() => allowBox()}
           variant="outlined"
           size="large"
         >
@@ -107,7 +114,7 @@ const AdvancedOptions = (props) => {
         </Button>
         <Button
           sx={{ mt: 2, color: "gray", borderColor: "gray" }} 
-          onClick={() => clearTheBox()}
+          onClick={() => clearBox()}
           variant="outlined"
           size="large"
         >

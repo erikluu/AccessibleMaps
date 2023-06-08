@@ -31,7 +31,7 @@ const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
 
 const Sidebar = (props) => {
-  const {map, updateStops, sidebarState, setSidebarState, bboxAllowed, setBboxAllowed} = props;
+  const {map, updateStops, sidebarState, setSidebarState, box, setBox} = props;
 
   const [routeData, setRouteData] = useState(null);
 
@@ -48,7 +48,6 @@ const Sidebar = (props) => {
   const [canRemove, setCanRemove] = useState(INITIAL_REMOVERS);
   const updateCanRemove = (id, val) => {
     canRemove[id] = val;
-    //console.log(canRemove);
   };
 
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
@@ -88,7 +87,6 @@ const Sidebar = (props) => {
       curData[id] = newData;
       setCoords(curData);
     }
-
     console.log("new path is...", coords);
   };
 
@@ -153,7 +151,7 @@ const Sidebar = (props) => {
 
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
-    const query = createQuery.createQuery(coords, maxSlope);
+    const query = createQuery.createQuery(coords, maxSlope, box);
 
     if (query) {
       console.log("got", query);
@@ -298,6 +296,8 @@ const Sidebar = (props) => {
     addSearchBar(2);
   } 
 
+  console.log("box is now", box);
+
   return (
     <Drawer 
       anchor="left"
@@ -340,7 +340,7 @@ const Sidebar = (props) => {
             Find Route
           </Button>
           <div className="options" id="options" >
-            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} />
+            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} setBox={setBox}/>
           </div>
           <div 
             className="chart-wrapper" 

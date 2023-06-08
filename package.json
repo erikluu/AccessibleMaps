@@ -4,7 +4,7 @@
   "homepage": "https://erikluu.github.io/accessiblemaps",
   "private": true,
   "scripts": {
-    "predeploy": "npm run build",
+    "predeploy": "cd frontend && npm run build",
     "deploy": "gh-pages -d build",
     "frontend": "cd frontend && npm start",
     "backend": "cd backend && nodemon app.js",
@@ -16,5 +16,9 @@
   "dependencies": {
     "gh-pages": "^5.0.0",
     "react-scripts": "^5.0.1"
-  }
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
 }

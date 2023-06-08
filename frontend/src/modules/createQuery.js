@@ -1,8 +1,13 @@
+const formatBox = (box) => {
+    return `[[[${box[0].lat},${box[0].lng}],[${box[1].lat},${box[1].lng}]]]`;
+};
 
-const createQuery = (path, slope) => {
+
+const createQuery = (path, slope, box) => {
     if (slope == null || slope === 0) 
         slope = 50;
 
+    console.log('BOX', box);
     console.log("given", path, slope);
     if (path.length < 2) {
         console.log("ERROR: Not enough waypoints");
@@ -20,7 +25,11 @@ const createQuery = (path, slope) => {
         parameters += wp;
     }
 
-    const query = base + parameters;
+    let query = base + parameters;
+    if (box != null) {
+        query += "&bbox=" + formatBox(box);
+    }
+
     return query;
 };
 
