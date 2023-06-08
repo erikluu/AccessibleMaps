@@ -23,6 +23,8 @@ import Typography from '@mui/material/Typography';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/Help';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const createQuery = require('../modules/createQuery');
 
@@ -30,12 +32,29 @@ const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
 
+const createBoxOutline = (box) => {
+  let points = [];
+  const x1 = box[0].lng;
+  const y1 = box[0].lat;
+  const x2 = box[1].lng;
+  const y2 = box[1].lat;
+
+  points.push([x1, y1]);
+  points.push([x2, y1]);
+  points.push([x2, y2]);
+  points.push([x1, y2]);
+  points.push([x1, y1]);
+
+  return [points];
+};
+
 const Sidebar = (props) => {
   const {map, updateStops, sidebarState, setSidebarState, box, setBox} = props;
 
   const [routeData, setRouteData] = useState(null);
-
   const [dragging, setDragging] = useState(false);
+  const [maxSlope, setMaxSlope] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setPosition] = useState();
@@ -73,24 +92,15 @@ const Sidebar = (props) => {
       curData.push(undefined);
     }
     if (curData.length == id) {
-      curData.push({
-        id,
-        loc: coord
-      });
+      curData.push({ id, loc: coord });
       setCoords(curData);
     }
     else {
-      const newData = {
-        id,
-        loc: coord
-      };
+      const newData = { id, loc: coord };
       curData[id] = newData;
       setCoords(curData);
     }
-    console.log("new path is...", coords);
   };
-
-  const [maxSlope, setMaxSlope] = useState(null);
 
   const [optionsDisplay, setOptionsDisplay] = useState("none");
   const toggleOptions = () => {
@@ -123,6 +133,7 @@ const Sidebar = (props) => {
       return <ArrowBackIcon/>;
     }
   };
+
 
   // updates path list with new coordinates for each searchbar
   const addLoc = (item) => {
@@ -167,35 +178,52 @@ const Sidebar = (props) => {
 
   const extractPoints = (sections) => {
     let allPoints = [];
-
     for (const section of sections) {
-      console.log(section);
       for (const segment of section.segments) {
         for (const point of segment.points) {
           allPoints.push([point[0], point[1], point[3]]);
         }
       }
     }
-
     return allPoints;
   };
   
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
+    setLoading(true);
     const query = createQuery.createQuery(coords, maxSlope, box);
-    clearBox();
+    if (box != null) {
+      const boxOutline = createBoxOutline(box);
+      const geoJson = {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: boxOutline
+        }
+      };
+      map.map.getSource("box1outline").setData(geoJson);
+      map.map.getSource("box1fill").setData(geoJson);
 
-    if (query) {
-      console.log("got", query);
-
-      const resp = await axios.get(query);
-      console.log(resp.data[0].sections);
-      const points = extractPoints(resp.data[0].sections);
-
-      setRouteData(points);
-      updateStops(points);      
     }
-    
+    clearBox();
+    try {
+      if (query) {
+        console.log("got", query);
+
+        const resp = await axios.get(query);
+        console.log(resp.data[0].sections);
+        const points = extractPoints(resp.data[0].sections);
+
+        setRouteData(points);
+        updateStops(points);      
+      }
+    }
+    catch(err) {
+      console.log("request error");
+    }
+    finally {
+      setLoading(false);
+    }
   };
 
   const updateGeocoders = () => {
@@ -214,7 +242,7 @@ const Sidebar = (props) => {
           searchBar.removeChild(searchBar.firstChild);
           searchBar.appendChild(newGeocoder.onAdd(map.map));
           searchBar.setAttribute("id", i);
-          searchBar.style.zIndex = 1000 - i;
+          searchBar.style.zIndex = 100 - i;
           console.log("update searchbar: ", searchBar);
 
           // update most recently used searchbar so that a location can be tied to it
@@ -323,86 +351,94 @@ const Sidebar = (props) => {
   console.log("box is now", box);
 
   return (
-    <Drawer 
-      anchor="left"
-      open={sidebarState}
-      variant="persistent"
-    >
-      <div className="navbar">
-        <div className="navbar-header">
-          <Stack   
-            direction="row"
-            justifyContent="space-around"
-            alignItems="center"
-            spacing={6}
-          >
-            <Typography variant="h4">
-              Navigation
-            </Typography>
-            <IconButton 
-              onClick={() => setSidebarState(false)}
+    <div>
+      <Drawer 
+        anchor="left"
+        open={sidebarState}
+        variant="persistent"
+      >
+        <div className="navbar">
+          <div className="navbar-header">
+            <Stack   
+              direction="row"
+              justifyContent="space-around"
+              alignItems="center"
+              spacing={6}
             >
-              <NavigateBeforeIcon />
-            </IconButton>
-          </Stack>
-          <br className="header-br"></br>
-          <Divider/>
-        </div>
-        <div className="navbar-body">
-          <List className="navlist" id="stoplist" >
-            {renderStops()}
-          </List>
-          <Divider>
-            <NavigationOutlinedIcon sx={{ color: "black" }}/>
-          </Divider>
-          <Button 
-            sx={{ mt: 1 }} 
-            variant="contained" 
-            size="large"
-            onClick={() => getRoute()}
-          >
-            Find Route
-          </Button>
-          <div className="options" id="options" >
-            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} setBox={setBox}/>
+              <Typography variant="h4">
+                Navigation
+              </Typography>
+              <IconButton 
+                onClick={() => setSidebarState(false)}
+              >
+                <NavigateBeforeIcon />
+              </IconButton>
+            </Stack>
+            <br className="header-br"></br>
+            <Divider/>
           </div>
-          <div 
-            className="chart-wrapper" 
-            onMouseLeave={() => map.map.getSource("point").setData({type: "Point", coordinates: [-2000, -2000]})}
-          >
-            <ElevationChart routeData={routeData} map={map} />
+          <div className="navbar-body">
+            <List className="navlist" id="stoplist" >
+              {renderStops()}
+            </List>
+            <Divider>
+              <NavigationOutlinedIcon sx={{ color: "black" }}/>
+            </Divider>
+            <Button 
+              sx={{ mt: 1 }} 
+              variant="contained" 
+              size="large"
+              onClick={() => getRoute()}
+            >
+              Find Route
+            </Button>
+            <div className="options" id="options" >
+              <AdvancedOptions map={map} setMaxSlope={setMaxSlope} setBox={setBox}/>
+            </div>
+            <div 
+              className="chart-wrapper" 
+              onMouseLeave={() => map.map.getSource("point").setData({type: "Point", coordinates: [-2000, -2000]})}
+            >
+              <ElevationChart routeData={routeData} map={map} />
+            </div>
+          </div>
+          <div className="nav-bottom">
+            <Divider/>
+            <br className="footer-br"></br>
+            <Stack   
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={5}
+            >
+              <Button 
+                variant="raised"
+                endIcon={getOptionsButtonIcon()} 
+                sx={{ color: "gray" }}
+                size="large"
+                onClick={() => toggleOptions()}
+              >
+                {getOptionsButtonText()}
+              </Button>
+              <Button 
+                variant="raised"
+                endIcon={<HelpIcon/>} 
+                sx={{ color: "gray" }}
+                size="large"
+              >
+                Help
+              </Button>
+            </Stack>
           </div>
         </div>
-        <div className="nav-bottom">
-          <Divider/>
-          <br className="footer-br"></br>
-          <Stack   
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            spacing={5}
-          >
-            <Button 
-              variant="raised"
-              endIcon={getOptionsButtonIcon()} 
-              sx={{ color: "gray" }}
-              size="large"
-              onClick={() => toggleOptions()}
-            >
-              {getOptionsButtonText()}
-            </Button>
-            <Button 
-              variant="raised"
-              endIcon={<HelpIcon/>} 
-              sx={{ color: "gray" }}
-              size="large"
-            >
-              Help
-            </Button>
-          </Stack>
-        </div>
-      </div>
-    </Drawer>
+      </Drawer>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: 1 }}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </div>
   );
 };
 

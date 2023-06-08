@@ -25,6 +25,7 @@ const createQuery = (path, slope, box) => {
     console.log("given", path, slope);
     if (path.length < 2) {
         console.log("ERROR: Not enough waypoints");
+        return;
     }
 
     // with an > 2 waypoints, format the query

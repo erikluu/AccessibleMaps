@@ -14,14 +14,21 @@ const defZoom = 9.00;
 
 const SIDEBAR_WIDTH_PADDING = { left: 325 };
 const INITIAL_ROUTE = {
-  "type": "FeatureCollection",
-  "features": [{
-      "type": "Feature",
-      "geometry": {
-          "type": "LineString",
-          "coordinates": [[-2000, -2000]]
+  type: "FeatureCollection",
+  features: [{
+      type: "Feature",
+      geometry: {
+          type: "LineString",
+          coordinates: [[-2000, -2000]]
       }
   }]
+};
+const INITIAL_BOX = {
+  type: "Feature",
+  geometry: {
+    type: "Polygon",
+    coordinates: [[]]
+  }
 };
 const INITIAL_POINT = {type: "Point", coordinates: [-2000, -2000]};
 
@@ -123,12 +130,12 @@ const MapView = (props) => {
   const updatePath = () => {
     const points = currentPath.map(pp => [pp[1], pp[0]]);  
     const geoJson = {
-      "type": "FeatureCollection",
-      "features": [{
-          "type": "Feature",
-          "geometry": {
-              "type": "LineString",
-              "coordinates": points
+      type: "FeatureCollection",
+      features: [{
+          type: "Feature",
+          geometry: {
+              type: "LineString",
+              coordinates: points
           }
       }]
     };
@@ -170,17 +177,17 @@ const MapView = (props) => {
     map.current.on("load", () => {
       // route layer
       map.current.addLayer({
-        "id": "data-update",
-        "type": "line",
-        "source": {
-            "type": "geojson",
-            "data": INITIAL_ROUTE 
+        id: "data-update",
+        type: "line",
+        source: {
+            type: "geojson",
+            data: INITIAL_ROUTE 
         },
-        "layout": {
+        layout: {
             "line-join": "round",
             "line-cap": "round"
         },
-        "paint": {
+        paint: {
             "line-color": "#4285F4",
             "line-width": 8
         }
@@ -188,17 +195,46 @@ const MapView = (props) => {
 
       // tracks a point along the current route
       map.current.addLayer({
-        'id': 'point',
-        'source': {
+        id: "point",
+        source: {
           type: "geojson",
           data: INITIAL_POINT
         },
-        'type': 'circle',
-        'paint': {
-          'circle-radius': 10,
-          'circle-color': "#FF0000"
+        type: "circle",
+        paint: {
+          "circle-radius": 10,
+          "circle-color": "#FF0000"
         }
       });
+
+      // bounding box template layers
+      map.current.addLayer({
+        id: "box1outline",
+        type: "line",
+        source: {
+          type: "geojson",
+          data: INITIAL_BOX,
+        },
+        layout: {},
+        paint: {
+          "line-color": "#FF0000",
+          "line-width": 3
+        }
+      });
+      map.current.addLayer({
+        id: "box1fill",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: INITIAL_BOX,
+        },
+        layout: {},
+        paint: {
+          "fill-color": "#FF0000",
+          "fill-opacity": 0.3
+        }
+      });
+
 
       canvas.current = map.current.getCanvasContainer();
       canvas.current.addEventListener("mousedown", mouseDown, true);
