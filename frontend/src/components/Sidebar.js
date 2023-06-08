@@ -17,12 +17,10 @@ import AddIcon from '@mui/icons-material/Add';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import Stack from '@mui/material/Stack'
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import Typography from '@mui/material/Typography';
 import SettingsIcon from '@mui/icons-material/Settings';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import HelpIcon from '@mui/icons-material/Help';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
@@ -33,28 +31,35 @@ const INITIAL_SEARCHBARS = [];
 const INITIAL_REMOVERS = [];
 
 const Sidebar = (props) => {
-  const {map, updateStops, sidebarState, setSidebarState, bboxAllowed, setBboxAllowed} = props;
+  const {map, updateStops, sidebarState, setSidebarState, box, setBox} = props;
 
   const [routeData, setRouteData] = useState(null);
 
+  const [dragging, setDragging] = useState(false);
+
   const [newLoc, setNewLoc] = useState();  
-  const [curPosition, setCurPosition] = useState();
+  const [curPosition, setPosition] = useState();
+  const setCurPosition = (i) => {
+    const div = document.getElementById("top-level");
+    div.setAttribute("data-cur", i);
+    setPosition(i);
+  };
+
   const [canRemove, setCanRemove] = useState(INITIAL_REMOVERS);
   const updateCanRemove = (id, val) => {
     canRemove[id] = val;
-    //console.log(canRemove);
   };
 
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
   const addSearchBar = (id) => {
     let newID = id;
-    let meta = 'init';
+    let meta = "init";
     if (newID === 0) {
       newID = searchBars[searchBars.length - 1].id + 1;
-      meta = 'additional';
+      meta = "additional";
     }
     const data = {
-      loc: '',
+      loc: "",
       id: newID,
       meta
     };
@@ -63,11 +68,26 @@ const Sidebar = (props) => {
 
   const [coords, setCoords] = useState(INITIAL_COORDS);
   const addCoords = (coord, id) => {
-    const data = {
-      id,
-      loc: coord
-    };
-    setCoords([...coords, data]);
+    let curData = coords;
+    while (curData.length < id) {
+      curData.push(undefined);
+    }
+    if (curData.length == id) {
+      curData.push({
+        id,
+        loc: coord
+      });
+      setCoords(curData);
+    }
+    else {
+      const newData = {
+        id,
+        loc: coord
+      };
+      curData[id] = newData;
+      setCoords(curData);
+    }
+    console.log("new path is...", coords);
   };
 
   const [maxSlope, setMaxSlope] = useState(null);
@@ -104,32 +124,57 @@ const Sidebar = (props) => {
     }
   };
 
-  
-
   // updates path list with new coordinates for each searchbar
   const addLoc = (item) => {
-    console.log(item);
+    const div = document.getElementById("top-level");
+    const pos = div.getAttribute("data-cur");
+
     const newCoords = item.geometry.coordinates;
     setNewLoc(newCoords);
     const marker = new map.mapboxgl.Marker({
       draggable: true,
+      occludedOpacity: pos,
     })
     .setLngLat(newCoords)
     .addTo(map.map);
 
+    const onDragEnd = () => {
+      setCurPosition(pos);
+      const lngLat = marker.getLngLat();
+      setNewLoc([lngLat.lng, lngLat.lat]);
+      setDragging(true);
+    };
+    marker.on('dragend', onDragEnd);
+
     return item.place_name;
   };
 
+  const clearBox = () => {
+    document.getElementById("top-level").setAttribute("data-box", 0);
+    setBox(null);
+    const box = document.getElementById("bbox");
+    if (box) {
+      box.parentNode.removeChild(box);
 
+      map.map.dragPan.enable();
+      map.map.doubleClickZoom.enable();
+      map.map.keyboard.enable();
+      map.map.scrollZoom.enable();
+      map.map.dragRotate.enable();
+      map.map.touchZoomRotate.enable();
+    }
+  };
+  
   // navigation function - calls backend and returns list of points
   const getRoute = async () => {
-    const query = createQuery.createQuery(coords, maxSlope);
+    const query = createQuery.createQuery(coords, maxSlope, box);
+    clearBox();
 
     if (query) {
       console.log("got", query);
 
       const resp = await axios.get(query);
-      console.log(resp);
+      console.log("Response: ", resp);
       //console.log(resp.data[0][0].sections);
       const points = resp.data[0][0].sections[0].polyline.polyline;
       //console.log(points);
@@ -167,6 +212,9 @@ const Sidebar = (props) => {
 
           // update most recently used searchbar so that a location can be tied to it
           searchBar.addEventListener("change", (e) => {
+            setCurPosition(e.currentTarget.id);
+          });
+          searchBar.addEventListener("mouseover", (e) => {
             setCurPosition(e.currentTarget.id);
           });
         }
@@ -242,20 +290,30 @@ const Sidebar = (props) => {
     setCanRemove(arr);
   }, [searchBars]);
 
+  useEffect(() => {
+    if (dragging & routeData == null) {
+      setDragging(false);
+    }
+    if (dragging & routeData != null) {
+      setDragging(false);
+      getRoute();
+    }
+  }, [dragging]);
+
   // return empty if the map hasn't initialized, need the map to create geocoders in the search bar
-  // bug: not sure why this is true when the search bar re collapses
   if (!map) {
     return <div></div>;
   }
 
   // init path to have 2 stops to begin
-  // bug: only the second search bar renders when they are added at the same time
   if (searchBars.length === 0) {
     addSearchBar(1);
   }
   if (searchBars.length === 1) {
     addSearchBar(2);
   } 
+
+  console.log("box is now", box);
 
   return (
     <Drawer 
@@ -299,7 +357,7 @@ const Sidebar = (props) => {
             Find Route
           </Button>
           <div className="options" id="options" >
-            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} />
+            <AdvancedOptions map={map} setMaxSlope={setMaxSlope} setBox={setBox}/>
           </div>
           <div 
             className="chart-wrapper" 
