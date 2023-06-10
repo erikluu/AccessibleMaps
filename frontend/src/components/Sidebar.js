@@ -61,6 +61,7 @@ const Sidebar = (props) => {
   const [maxSlope, setMaxSlope] = useState(null);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
 
   const [newLoc, setNewLoc] = useState();  
   const [curPosition, setPosition] = useState();
@@ -219,12 +220,13 @@ const Sidebar = (props) => {
         const resp = await axios.get(query);
 
         // error checking
+        if (resp.hasOwnProperty("error")) {
+          setAlert(true);
+          setAlertMsg(resp.error.message);
+          return;
+        }
 
-        // if (resp) {
-        //   setAlert(true);
-        // }
-
-        console.log(resp.data[0].sections);
+        //console.log(resp.data[0].sections);
         const points = extractPoints(resp.data[0].sections);
 
         setRouteData(points);
@@ -233,6 +235,8 @@ const Sidebar = (props) => {
     }
     catch(err) {
       console.log("unknown error");
+      setAlert(true);
+      setAlertMsg("Internal server error, please try again.");
     }
     finally {
       setLoading(false);
@@ -460,7 +464,7 @@ const Sidebar = (props) => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Uh oh, you are gay ...
+            {alertMsg}
           </DialogContentText>
         </DialogContent>
         <DialogActions>

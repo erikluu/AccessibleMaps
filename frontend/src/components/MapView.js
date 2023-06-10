@@ -137,7 +137,7 @@ const MapView = (props) => {
       }]
     };
   
-    map.current.getSource('data-update').setData(geoJson);
+    map.current.getSource("data-update").setData(geoJson);
 
     const bounds = new mapboxgl.LngLatBounds(points[0], points[0]);
     for (const p of points) {
@@ -146,7 +146,6 @@ const MapView = (props) => {
     map.current.fitBounds(bounds, {
       padding: 20
     });
-
   };
 
   const addLoc = (item) => {
@@ -232,12 +231,11 @@ const MapView = (props) => {
         }
       });
 
-
       canvas.current = map.current.getCanvasContainer();
       canvas.current.addEventListener("mousedown", mouseDown, true);
     });
 
-    map.current.on("mousedown", (e) => {
+    map.current.on("click", (e) => {
       //console.log('p1:', e.lngLat.wrap());
       if (!allowBox()) return;
       setTopLeftP(e.lngLat.wrap());
@@ -250,14 +248,56 @@ const MapView = (props) => {
     });
 
     // add search bar
-    map.current.addControl(
-      new MapboxGeocoder({
-        accessToken: mapboxgl.accessToken,
-        getItemValue: addLoc,
-        marker: false,
-        mapboxgl: mapboxgl,
-      })
-    );
+    // map.current.addControl(
+    //   new MapboxGeocoder({
+    //     accessToken: mapboxgl.accessToken,
+    //     getItemValue: addLoc,
+    //     marker: false,
+    //     mapboxgl: mapboxgl,
+    //   })
+    // );
+
+
+    // behavior for hovering over a defined bounding box
+    const popup = new mapboxgl.Popup({
+      closeButton: false
+    });
+    map.current.on("mousemove", (e) => {
+      const features = map.current.queryRenderedFeatures(e.point, {layers: ["box1fill"]});
+       
+      // Change the cursor style as a UI indicator.
+      map.current.getCanvas().style.cursor = features.length ? "pointer" : "";
+       
+      if (!features.length) {
+        popup.remove();
+        return;
+      }
+      
+      const boxCoords = features[0].geometry.coordinates[0];
+      //console.log('test', features, e.lngLat, boxCoords);
+      const lng = (boxCoords[0][0] + boxCoords[1][0]) / 2;
+      const lat = (boxCoords[1][1] + boxCoords[2][1]) / 2;
+
+      popup
+      .setLngLat({lng, lat})
+      .setText("Click to remove")
+      .addTo(map.current);
+    });
+    map.current.on("click", (e) => {
+      const features = map.current.queryRenderedFeatures(e.point, {layers: ["box1fill"]});
+       
+      // Change the cursor style as a UI indicator.
+      map.current.getCanvas().style.cursor = features.length ? "pointer" : "";
+       
+      if (!features.length) {
+        return;
+      }
+
+      map.current.getSource("box1outline").setData(INITIAL_BOX);
+      map.current.getSource("box1fill").setData(INITIAL_BOX);
+
+    });
+
     // track user location
     map.current.addControl(
       new mapboxgl.GeolocateControl({
