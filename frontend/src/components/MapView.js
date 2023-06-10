@@ -1,9 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
-import axios from "axios";
-
-const createQuery = require('../modules/createQuery');
 
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOXGL_API_KEY;
 
@@ -295,7 +292,7 @@ const MapView = (props) => {
   // redraw path every time coords are updated
   useEffect(() => {
     if (!currentPath) return;
-    if (currentPath.length == 0) return;
+    if (currentPath.length === 0) return;
     console.log("trying to re render path");
     updatePath();
   }, [currentPath]);

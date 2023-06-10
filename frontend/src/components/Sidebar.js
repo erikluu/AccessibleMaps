@@ -220,9 +220,9 @@ const Sidebar = (props) => {
 
         // error checking
 
-        if (resp) {
-          setAlert(true);
-        }
+        // if (resp) {
+        //   setAlert(true);
+        // }
 
         console.log(resp.data[0].sections);
         const points = extractPoints(resp.data[0].sections);
