@@ -9,6 +9,7 @@ const queryFormatting = require('./queryFormatting');
 const elevation = require('./elevation');
 const avoidance = require('./avoidance.js');
 const fs = require('fs');
+const { connected } = require('process');
 
 function decodePolylines(routes) {
     routes.forEach((route) => {
@@ -37,13 +38,16 @@ function callHERE(url) {
                     resolve(routes);
                 }
                 catch (err) {
-                    reject('HERE API error, URI too long. Try increasing the number of waypoints or increase max grade.');
+                    const error = new Error(err + ": URI probably too long. Try increasing the number of waypoints or increase max grade.");
+                    error.code = 414;
+                    reject(error);
                 }
             });
 
         }).on('error', (err) => {
-            console.log(err);
-            reject('HERE API error');
+            const error = new Error(err + ": HERE API call failed.");
+            error.code = 500;
+            reject(error);
         });
     });
 }
@@ -53,7 +57,16 @@ async function getRoute(query) {
     const maxGrade = parseInt(query['maxGrade']);
 
     let url = queryFormatting.formatInitialURL(query);
-    let routes = await callHERE(url);
+    try {
+        routes = await callHERE(url);
+    } catch (err) {
+        return {
+            error: {
+                code: 414,
+                message: err + ": URI probably too long. Try increasing the number of waypoints or increase max grade."
+            }
+        }
+    }
     let formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, units);
     
     // for testing
@@ -67,7 +80,12 @@ async function getRoute(query) {
         try {
             routes = await callHERE(url);
         } catch (err) {
-            return err;
+            return {
+                error: {
+                    code: 414,
+                    message: err + ": URI probably too long. Try increasing the number of waypoints or increase max grade."
+                }
+            }
         }
         formattedRoutes = await elevation.calculateElevationAndGradeBetweenPoints(routes, maxGrade);
         bboxes = avoidance.createBoundingBoxForSteepGrades(formattedRoutes, maxGrade);
