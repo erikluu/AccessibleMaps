@@ -199,20 +199,6 @@ const Sidebar = (props) => {
   const getRoute = async () => {
     setLoading(true);
     const query = createQuery.createQuery(coords, maxSlope, box);
-    if (box != null) {
-      const boxOutline = createBoxOutline(box);
-      const geoJson = {
-        type: "Feature",
-        geometry: {
-          type: "Polygon",
-          coordinates: boxOutline
-        }
-      };
-      map.map.getSource("box1outline").setData(geoJson);
-      map.map.getSource("box1fill").setData(geoJson);
-
-    }
-    clearBox();
     try {
       if (query) {
         console.log("got", query);

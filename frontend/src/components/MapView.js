@@ -24,10 +24,26 @@ const INITIAL_BOX = {
   type: "Feature",
   geometry: {
     type: "Polygon",
-    coordinates: [[]]
+    coordinates: []
   }
 };
 const INITIAL_POINT = {type: "Point", coordinates: [-2000, -2000]};
+
+const createBoxOutline = (box) => {
+  let points = [];
+  const x1 = box[0].lng;
+  const y1 = box[0].lat;
+  const x2 = box[1].lng;
+  const y2 = box[1].lat;
+
+  points.push([x1, y1]);
+  points.push([x2, y1]);
+  points.push([x2, y2]);
+  points.push([x1, y2]);
+  points.push([x1, y1]);
+
+  return [points];
+};
 
 const MapView = (props) => {
   const mapContainer = useRef(null);
@@ -46,6 +62,21 @@ const MapView = (props) => {
   const allowBox = () => {
     const div = document.getElementById("top-level");
     return div.getAttribute("data-box") != 0;
+  };
+
+  const clearBox = () => {
+    document.getElementById("top-level").setAttribute("data-box", 0);
+    const box = document.getElementById("bbox");
+    if (box) {
+      box.parentNode.removeChild(box);
+
+      map.current.dragPan.enable();
+      map.current.doubleClickZoom.enable();
+      map.current.keyboard.enable();
+      map.current.scrollZoom.enable();
+      map.current.dragRotate.enable();
+      map.current.touchZoomRotate.enable();
+    }
   };
 
   let start, box, current;
@@ -81,7 +112,7 @@ const MapView = (props) => {
     // create box
     box = document.createElement('div');
     box.classList.add('boxdraw');
-    box.id = "bbox";
+    box.id = 'bbox';
     canvas.current.appendChild(box);
    
     // Capture the first xy coordinates
@@ -119,8 +150,7 @@ const MapView = (props) => {
     document.removeEventListener("keydown", onKeyDown);
     document.removeEventListener("mouseup", onMouseUp);
 
-    //map.current.dragPan.enable();
-    document.getElementById("top-level").setAttribute("data-box", 0);
+    clearBox();
   };
 
   // route render function
@@ -146,15 +176,6 @@ const MapView = (props) => {
     map.current.fitBounds(bounds, {
       padding: 20
     });
-  };
-
-  const addLoc = (item) => {
-    const coords = item.geometry.coordinates;
-    new mapboxgl.Marker({
-      draggable: true,
-    }).setLngLat(coords).addTo(map.current);
-
-    return item.place_name;
   };
 
   useEffect(() => {
@@ -230,72 +251,44 @@ const MapView = (props) => {
           "fill-opacity": 0.3
         }
       });
+      map.current.addLayer({
+        id: "box2outline",
+        type: "line",
+        source: {
+          type: "geojson",
+          data: INITIAL_BOX,
+        },
+        layout: {},
+        paint: {
+          "line-color": "#FF0000",
+          "line-width": 3
+        }
+      });
+      map.current.addLayer({
+        id: "box2fill",
+        type: "fill",
+        source: {
+          type: "geojson",
+          data: INITIAL_BOX,
+        },
+        layout: {},
+        paint: {
+          "fill-color": "#FF0000",
+          "fill-opacity": 0.3
+        }
+      });
 
       canvas.current = map.current.getCanvasContainer();
       canvas.current.addEventListener("mousedown", mouseDown, true);
     });
 
-    map.current.on("click", (e) => {
-      //console.log('p1:', e.lngLat.wrap());
+    map.current.on("mousedown", (e) => {
       if (!allowBox()) return;
       setTopLeftP(e.lngLat.wrap());
-    });
-
+    });    
     map.current.on("mouseup", (e) => {
-      //console.log('p2:', e.lngLat.wrap());
       if (!allowBox()) return;
       setBottomRightP(e.lngLat.wrap());
-    });
-
-    // add search bar
-    // map.current.addControl(
-    //   new MapboxGeocoder({
-    //     accessToken: mapboxgl.accessToken,
-    //     getItemValue: addLoc,
-    //     marker: false,
-    //     mapboxgl: mapboxgl,
-    //   })
-    // );
-
-
-    // behavior for hovering over a defined bounding box
-    const popup = new mapboxgl.Popup({
-      closeButton: false
-    });
-    map.current.on("mousemove", (e) => {
-      const features = map.current.queryRenderedFeatures(e.point, {layers: ["box1fill"]});
-       
-      // Change the cursor style as a UI indicator.
-      map.current.getCanvas().style.cursor = features.length ? "pointer" : "";
-       
-      if (!features.length) {
-        popup.remove();
-        return;
-      }
-      
-      const boxCoords = features[0].geometry.coordinates[0];
-      //console.log('test', features, e.lngLat, boxCoords);
-      const lng = (boxCoords[0][0] + boxCoords[1][0]) / 2;
-      const lat = (boxCoords[1][1] + boxCoords[2][1]) / 2;
-
-      popup
-      .setLngLat({lng, lat})
-      .setText("Click to remove")
-      .addTo(map.current);
-    });
-    map.current.on("click", (e) => {
-      const features = map.current.queryRenderedFeatures(e.point, {layers: ["box1fill"]});
-       
-      // Change the cursor style as a UI indicator.
-      map.current.getCanvas().style.cursor = features.length ? "pointer" : "";
-       
-      if (!features.length) {
-        return;
-      }
-
-      map.current.getSource("box1outline").setData(INITIAL_BOX);
-      map.current.getSource("box1fill").setData(INITIAL_BOX);
-
     });
 
     // track user location
@@ -354,7 +347,31 @@ const MapView = (props) => {
 
   useEffect(() => {
     if (!allowBox()) return;
-    console.log("box is now", topLeftP, bottomRightP);
+    console.log("adding new bounding box...", topLeftP, bottomRightP);
+
+    const boxOutline = createBoxOutline([topLeftP, bottomRightP]);
+    const geoJson = {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: boxOutline
+      }
+    };
+
+    const b1 = map.current.getSource("box1outline");
+    console.log(b1._options.data);
+
+    if (map.current.getSource("box1outline")._options.data.geometry.coordinates.length == 0) {
+      map.current.getSource("box1outline").setData(geoJson);
+      map.current.getSource("box1fill").setData(geoJson);
+      console.log(map.current.getSource("box1outline")._options.data);
+
+    }
+    else if (map.current.getSource("box2outline")._options.data.geometry.coordinates.length == 0) {
+      map.current.getSource("box2outline").setData(geoJson);
+      map.current.getSource("box2fill").setData(geoJson);
+    }
+
     setBox([topLeftP, bottomRightP])
   }, [bottomRightP]);
 

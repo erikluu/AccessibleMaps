@@ -11,6 +11,14 @@ import Divider from '@mui/material/Divider';
 
 const DEFAULT_ADA_SLOPE = 8;
 
+const INITIAL_BOX = {
+  type: "Feature",
+  geometry: {
+    type: "Polygon",
+    coordinates: []
+  }
+};
+
 const AdvancedOptions = (props) => {
   const {map, setMaxSlope, setBox} = props;
 
@@ -24,24 +32,14 @@ const AdvancedOptions = (props) => {
   }, [slope]);
 
   const allowBox = () => {
-    if (document.getElementById("bbox") != null) return;
     document.getElementById("top-level").setAttribute("data-box", 1);
   };
 
   const clearBox = () => {
     document.getElementById("top-level").setAttribute("data-box", 0);
+    map.map.getSource("box1outline").setData(INITIAL_BOX);
+    map.map.getSource("box1fill").setData(INITIAL_BOX);
     setBox(null);
-    const box = document.getElementById("bbox");
-    if (box) {
-      box.parentNode.removeChild(box);
-
-      map.map.dragPan.enable();
-      map.map.doubleClickZoom.enable();
-      map.map.keyboard.enable();
-      map.map.scrollZoom.enable();
-      map.map.dragRotate.enable();
-      map.map.touchZoomRotate.enable();
-    }
   };
 
   return (
@@ -118,7 +116,7 @@ const AdvancedOptions = (props) => {
           variant="outlined"
           size="large"
         >
-          Reset
+          Clear
         </Button>
       </Stack>
     </div>

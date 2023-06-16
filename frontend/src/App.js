@@ -9,8 +9,6 @@ import MapView from "./components/MapView";
   href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 />;
 
-const INITIAL_BBOX = [];
-
 const App = () => {
   const [map, setMap] = useState();
   const updateMap = (map) => {

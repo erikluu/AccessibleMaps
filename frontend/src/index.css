@@ -121,13 +121,20 @@ code {
 }
 
 .boxdraw {
-  background: rgba(56, 135, 190, 0.1);
-  border: 2px solid #3887be;
+  background: rgba(255, 0, 0, 0.3);
+  border: 2px solid #f00;
   position: absolute;
   top: 0;
   left: 0;
   width: 0;
   height: 0;
+}
+
+.box-popup .mapboxgl-popup-content {
+  background-color: rgba(255, 255, 255);
+}
+.box-popup .mapboxgl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0);
 }
 
 /* .marker {
