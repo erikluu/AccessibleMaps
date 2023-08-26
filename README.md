@@ -1,10 +1,8 @@
 # AccessibleMaps
 
-AccessibleMaps is a web-based application that provides accessible routes for individuals with disabilities.
+AccessibleMaps is a web-based application that provides ADA-compliant accessible routes for individuals with disabilities.
 
-The application provides accessible routes for various modes of transportation such as driving, biking, transit, walking, and now an option for ADA users.
-
-## Features (planned)
+## Features
 * Accessible routes for ADA users
 * Map view for easy navigation
 * Detailed directions for each route
