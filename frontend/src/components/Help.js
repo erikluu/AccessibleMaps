@@ -4,7 +4,7 @@ const Help = (props) => {
 
   return (
     <div>
-        bruh
+      Nice
     </div>
   );
 };

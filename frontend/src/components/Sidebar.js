@@ -5,53 +5,25 @@ import AdvancedOptions from './AdvancedOptions';
 
 import axios from "axios";
 
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import CancelIcon from '@mui/icons-material/Cancel';
-import PlaceIcon from '@mui/icons-material/Place';
-import NavigationOutlinedIcon from '@mui/icons-material/NavigationOutlined';
-import Button from '@mui/material/Button';
-import AddIcon from '@mui/icons-material/Add';
-import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack'
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-import Typography from '@mui/material/Typography';
-import SettingsIcon from '@mui/icons-material/Settings';
-import HelpIcon from '@mui/icons-material/Help';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import {
+  List, ListItem, ListItemButton, ListItemIcon,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  Button,
+  Divider,
+  Drawer,
+  IconButton,
+  Stack,
+  Typography,
+  Backdrop,
+  CircularProgress
+} from '@mui/material';
+
+import { Place, Add, Settings, Help, ArrowBack, NavigationOutlined, NavigateBefore, Replay } from '@mui/icons-material';
 
 const createQuery = require('../modules/createQuery');
 
 const INITIAL_COORDS = [];
 const INITIAL_SEARCHBARS = [];
-const INITIAL_REMOVERS = [];
-
-const createBoxOutline = (box) => {
-  let points = [];
-  const x1 = box[0].lng;
-  const y1 = box[0].lat;
-  const x2 = box[1].lng;
-  const y2 = box[1].lat;
-
-  points.push([x1, y1]);
-  points.push([x2, y1]);
-  points.push([x2, y2]);
-  points.push([x1, y2]);
-  points.push([x1, y1]);
-
-  return [points];
-};
 
 const Sidebar = (props) => {
   const {map, updateStops, sidebarState, setSidebarState, box, setBox} = props;
@@ -71,16 +43,11 @@ const Sidebar = (props) => {
     setPosition(i);
   };
 
-  const [canRemove, setCanRemove] = useState(INITIAL_REMOVERS);
-  const updateCanRemove = (id, val) => {
-    canRemove[id] = val;
-  };
-
   const [searchBars, setSearchBars] = useState(INITIAL_SEARCHBARS);
   const addSearchBar = (id) => {
     let newID = id;
     let meta = "init";
-    if (newID === 0) {
+    if (newID === -1) {
       newID = searchBars[searchBars.length - 1].id + 1;
       meta = "additional";
     }
@@ -134,10 +101,10 @@ const Sidebar = (props) => {
   };
   const getOptionsButtonIcon = () => {
     if (optionsDisplay == "none") {
-      return <SettingsIcon/>;
+      return <Settings/>;
     }
     else {
-      return <ArrowBackIcon/>;
+      return <ArrowBack/>;
     }
   };
 
@@ -165,22 +132,6 @@ const Sidebar = (props) => {
     marker.on('dragend', onDragEnd);
 
     return item.place_name;
-  };
-
-  const clearBox = () => {
-    document.getElementById("top-level").setAttribute("data-box", 0);
-    setBox(null);
-    const box = document.getElementById("bbox");
-    if (box) {
-      box.parentNode.removeChild(box);
-
-      map.map.dragPan.enable();
-      map.map.doubleClickZoom.enable();
-      map.map.keyboard.enable();
-      map.map.scrollZoom.enable();
-      map.map.dragRotate.enable();
-      map.map.touchZoomRotate.enable();
-    }
   };
 
   const extractPoints = (sections) => {
@@ -248,41 +199,24 @@ const Sidebar = (props) => {
           searchBar.setAttribute("id", i);
           searchBar.style.zIndex = 100 - i;
           console.log("update searchbar: ", searchBar);
-
-          // update most recently used searchbar so that a location can be tied to it
-          searchBar.addEventListener("change", (e) => {
-            setCurPosition(e.currentTarget.id);
-          });
-          searchBar.addEventListener("mouseover", (e) => {
-            setCurPosition(e.currentTarget.id);
-          });
         }
       }
-
     }
   };
 
-  const test = (i) => {
-    if (canRemove[i]) {
-      return <CancelIcon sx={{ m: 1 }} />;    
-    }
-    else {
-      return <PlaceIcon sx={{ m: 1 }} />;
-    }
+  const resetButtonFn = () => {
+    setSearchBars(INITIAL_SEARCHBARS);
   }
 
   const renderStops = () => {
     const fullList = searchBars.map(s => {
-      const searchBar = <ListItem disablePadding key={s.id} >
-        <ListItemButton>
+      const searchBar = <ListItem disablePadding key={s.id} onMouseEnter={() => setCurPosition(s.id)}>
+        <ListItemButton >
           <div className="geocoder_div" >
             <div id="placeholder"></div>
           </div>
-          <ListItemIcon
-            onMouseEnter={() => updateCanRemove(s.id, true)}
-            onMouseLeave={() => updateCanRemove(s.id, false)}
-          >
-            {test(s.id)}
+          <ListItemIcon>
+            <Place sx={{ m: 1 }} />
           </ListItemIcon>
         </ListItemButton>
       </ListItem>;
@@ -290,11 +224,25 @@ const Sidebar = (props) => {
       return searchBar;
     });
 
-    const addButton = <ListItem disablePadding key="form" >
-      <ListItemButton onClick={() => addSearchBar(0)} >
+    const resetButton = <ListItem disablePadding key="reset" >
+      <ListItemButton onClick={() => resetButtonFn()} >
         <Button 
           variant="raised"
-          endIcon={<AddIcon/>} 
+          endIcon={<Replay/>} 
+          sx={{ color: "gray", backgroundColor: "transparent",  "&:hover": {backgroundColor: "transparent"} }}
+          size="small"
+          disableRipple
+        >
+          Reset Route
+        </Button>
+      </ListItemButton>
+    </ListItem>;
+
+    const addButton = <ListItem disablePadding key="form" >
+      <ListItemButton onClick={() => addSearchBar(-1)} >
+        <Button 
+          variant="raised"
+          endIcon={<Add/>} 
           sx={{ color: "gray", backgroundColor: "transparent",  "&:hover": {backgroundColor: "transparent"} }}
           size="small"
           disableRipple
@@ -303,6 +251,10 @@ const Sidebar = (props) => {
         </Button>
       </ListItemButton>
     </ListItem>;
+
+    if (searchBars.length > 2) {
+      fullList.push(resetButton);
+    }
 
     fullList.push(addButton);
 
@@ -326,7 +278,7 @@ const Sidebar = (props) => {
     let arr = [];
     for (let i = 0; i < searchBars.length - 1; i++)
       arr.push(false);
-    setCanRemove(arr);
+    //setCanRemove(arr);
   }, [searchBars]);
 
   useEffect(() => {
@@ -346,13 +298,11 @@ const Sidebar = (props) => {
 
   // init path to have 2 stops to begin
   if (searchBars.length === 0) {
-    addSearchBar(1);
+    addSearchBar(0);
   }
   if (searchBars.length === 1) {
-    addSearchBar(2);
+    addSearchBar(1);
   } 
-
-  console.log("box is now", box);
 
   return (
     <div>
@@ -375,7 +325,7 @@ const Sidebar = (props) => {
               <IconButton 
                 onClick={() => setSidebarState(false)}
               >
-                <NavigateBeforeIcon />
+                <NavigateBefore />
               </IconButton>
             </Stack>
             <br className="header-br"></br>
@@ -386,7 +336,7 @@ const Sidebar = (props) => {
               {renderStops()}
             </List>
             <Divider>
-              <NavigationOutlinedIcon sx={{ color: "black" }}/>
+              <NavigationOutlined sx={{ color: "black" }}/>
             </Divider>
             <Button 
               sx={{ mt: 1 }} 
@@ -426,7 +376,7 @@ const Sidebar = (props) => {
               </Button>
               <Button 
                 variant="raised"
-                endIcon={<HelpIcon/>} 
+                endIcon={<Help/>} 
                 sx={{ color: "gray" }}
                 size="large"
               >

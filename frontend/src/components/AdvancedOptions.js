@@ -1,13 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
-import Slider from '@mui/material/Slider';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack'
-import IconButton from '@mui/material/IconButton';
+import { Slider, Button, Stack, IconButton, Tooltip, Typography, Divider } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
+
 
 const DEFAULT_ADA_SLOPE = 8;
 
