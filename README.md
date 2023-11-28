@@ -8,6 +8,13 @@ AccessibleMaps is a web-based application that provides ADA-compliant accessible
 * Detailed directions for each route
 * User-friendly interface
 
+![homepage](images/homepage.png)
+
+![example_route_1](images/route1.png)
+
+![example_route_2](images/route2.png)
+
+
 ## For Development
 * npm run frontend
 * npm run backend
