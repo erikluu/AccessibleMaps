@@ -206,6 +206,7 @@ const Sidebar = (props) => {
 
   const resetButtonFn = () => {
     setSearchBars(INITIAL_SEARCHBARS);
+    
   }
 
   const renderStops = () => {
@@ -252,11 +253,11 @@ const Sidebar = (props) => {
       </ListItemButton>
     </ListItem>;
 
+    fullList.push(addButton);
+
     if (searchBars.length > 2) {
       fullList.push(resetButton);
     }
-
-    fullList.push(addButton);
 
     return fullList;
   };
